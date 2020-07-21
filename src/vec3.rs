@@ -32,7 +32,9 @@ impl Vec3 {
     pub fn length(&self) -> f64 {
         return ((self.x*self.x + self.y*self.y + self.z*self.z) as f64).sqrt();
     }
-    pub fn unit(self: Self) -> Self {
+    /// # Panics
+    /// Panic if Self == {0.0 , 0.0 , 0.0}
+    pub fn unit(self: &Self) -> Self {
         let len = self.length();
         if len == 0.0 {
             panic!("Divided 0!");
