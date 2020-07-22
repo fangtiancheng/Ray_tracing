@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Copy, PartialEq)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -23,14 +23,18 @@ impl Vec3 {
     pub fn squared_length(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
-    pub fn elemul(a:Self, b:Self) -> Self {
+    pub fn elemul(a: Self, b: Self) -> Self {
         return Self::new(a.x * b.x, a.y * b.y, a.z * b.z);
     }
-    pub fn cross(a:Self, b:Self) ->Self {
-        return Self::new(a.y*b.z - a.z*b.y,a.z*b.x - a.x*b.z,a.x*b.y - a.y*b.x);
+    pub fn cross(a: Self, b: Self) -> Self {
+        return Self::new(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x,
+        );
     }
     pub fn length(&self) -> f64 {
-        return ((self.x*self.x + self.y*self.y + self.z*self.z) as f64).sqrt();
+        return ((self.x * self.x + self.y * self.y + self.z * self.z) as f64).sqrt();
     }
     /// # Panics
     /// Panic if Self == {0.0 , 0.0 , 0.0}
@@ -39,7 +43,7 @@ impl Vec3 {
         if len == 0.0 {
             panic!("Divided 0!");
         }
-        return Self::new(self.x/len, self.y/len, self.z/len);
+        return Self::new(self.x / len, self.y / len, self.z / len);
     }
 }
 
@@ -67,7 +71,6 @@ impl Add<f64> for Vec3 {
     }
 }
 
-
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
@@ -78,7 +81,8 @@ impl AddAssign for Vec3 {
     }
 }
 
-impl AddAssign<f64> for Vec3 {//重载 += f64
+impl AddAssign<f64> for Vec3 {
+    //重载 += f64
     fn add_assign(&mut self, other: f64) {
         *self = Self {
             x: self.x + other,
@@ -113,7 +117,7 @@ impl std::ops::SubAssign for Vec3 {
 impl std::ops::Sub<f64> for Vec3 {
     type Output = Self;
 
-    fn sub(self, other: f64) -> Self{
+    fn sub(self, other: f64) -> Self {
         Self {
             x: self.x - other,
             y: self.y - other,
@@ -122,7 +126,8 @@ impl std::ops::Sub<f64> for Vec3 {
     }
 }
 
-impl std::ops::SubAssign<f64> for Vec3 {//重载 -= f64
+impl std::ops::SubAssign<f64> for Vec3 {
+    //重载 -= f64
     fn sub_assign(&mut self, other: f64) {
         *self = Self {
             x: self.x - other,
@@ -135,17 +140,17 @@ impl std::ops::SubAssign<f64> for Vec3 {//重载 -= f64
 impl std::ops::Mul for Vec3 {
     type Output = f64;
 
-    fn mul(self,other: Self) -> f64{
-        return self.x* other.x +self.y* other.y +self.z* other.z;
+    fn mul(self, other: Self) -> f64 {
+        return self.x * other.x + self.y * other.y + self.z * other.z;
     }
 }
 
 impl std::ops::MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, other: f64) {
-        *self = Self{
-            x: self.x* other,
-            y: self.y* other,
-            z: self.z* other,
+        *self = Self {
+            x: self.x * other,
+            y: self.y * other,
+            z: self.z * other,
         };
     }
 }
@@ -154,10 +159,10 @@ impl std::ops::Mul<f64> for Vec3 {
     type Output = Self;
 
     fn mul(self, other: f64) -> Self {
-        return Self{
-            x: self.x* other,
-            y: self.y* other,
-            z: self.z* other,
+        return Self {
+            x: self.x * other,
+            y: self.y * other,
+            z: self.z * other,
         };
     }
 }
@@ -166,10 +171,10 @@ impl std::ops::Div<f64> for Vec3 {
     type Output = Self;
 
     fn div(self, other: f64) -> Self {
-        return Self{
-            x: self.x/ other,
-            y: self.y/ other,
-            z: self.z/ other,
+        return Self {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
         };
     }
 }
@@ -178,7 +183,7 @@ impl std::ops::Neg for Vec3 {
     type Output = Self;
 
     fn neg(self) -> Self {
-        return Self{
+        return Self {
             x: -self.x,
             y: -self.y,
             z: -self.z,
@@ -218,7 +223,6 @@ mod tests {
         )
     }
 
-    
     #[test]
     fn test_add_assign_f64() {
         let mut x = Vec3::new(1.0, 0.0, -1.0);
@@ -284,7 +288,8 @@ mod tests {
     }
 
     #[test]
-    fn test_cross() {//行列式叉乘
+    fn test_cross() {
+        //行列式叉乘
         assert_eq!(
             Vec3::cross(Vec3::new(1.0, 2.0, 3.0), Vec3::new(2.0, 3.0, 4.0)),
             Vec3::new(8.0 - 9.0, 6.0 - 4.0, 3.0 - 4.0)
@@ -301,7 +306,6 @@ mod tests {
         assert_eq!(Vec3::new(1.0, 2.0, 3.0).squared_length(), 14.0 as f64);
     }
 
-    
     #[test]
     fn test_length() {
         assert_eq!(
@@ -324,5 +328,4 @@ mod tests {
     fn test_unit_panic() {
         Vec3::new(0.0, 0.0, 0.0).unit();
     }
-    
 }
