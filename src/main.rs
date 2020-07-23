@@ -1,256 +1,100 @@
 #[allow(clippy::float_cmp)]
+extern crate rand;
+mod toys;
 mod vec3;
 mod point;
 mod ray;
 mod sphere;
-use std::thread;
+mod camera;
+mod hit;
 use image::{ImageBuffer, RgbImage};
-use imageproc::drawing::draw_line_segment_mut;
-use indicatif::ProgressBar;
-pub use point::Fireworks;
-pub use point::Point2;
+// use imageproc::drawing::draw_line_segment_mut;
+// use indicatif::ProgressBar;
+// pub use point::Point2;
 pub use vec3::Vec3;
 pub use ray::Ray;
+pub use hit::*;
 pub use sphere::Sphere;
-type Point3 = Vec3;
+pub use camera::Camera;
 
 fn main() {
-    let x = Vec3::new(1.0, 1.0, 1.0);
-    println!("{:?}", x);
-    let width = 1600;
-    let height = 900;
-    let dist = 1600;
-    let mut img: RgbImage = ImageBuffer::new(width, height);
+    // Image
+    const aspect_ratio :f64 = 16.0 / 9.0;
+    const image_width :u32 = 400;
+    const image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
+    const samples_per_pixel :u32 = 100;
+    // World
+    let mut world:HittableList = HittableList::zero();
+    world.objects.push( Box::new( Sphere::new(Vec3::new(0.0,0.0,-1.0), 0.5)));
+    world.objects.push( Box::new( Sphere::new(Vec3::new(0.0,-100.5,-1.0), 100.0)));
+
+    // Camera
+    let cam :Camera = Camera::standard() ;
+
+    // Render
+    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
 
     let ball :Sphere = Sphere {//一个球，球的中心在(0,0,100)
         center : Vec3::new ( 0.0 , 0.0, 100.0),
         radius : 10.0,
     };
-    for x in 0..width {
-        for y in 0..height {
-            let pixel = img.get_pixel_mut(x, y);
-            let ray = Ray{
-                orig: Vec3::new(0.0,0.0,0.0),
-                dir : Vec3{
-                    x: (x as i32- (width/2) as i32) as f64,
-                    y: (y as i32- (height/2) as i32) as f64,
-                    z: dist as f64,
-                }
-            };
-            if ball.hit_sphere(&ray) {
-                *pixel = image::Rgb([255 , 0, 0]);
+    for j in 0..image_height {
+        for i in 0..image_width {
+            let mut pixel_color= Vec3::zero();
+            for s in 0..samples_per_pixel {
+                let u = (i as f64+ rand::random::<f64>())/(image_width as f64 - 1.0);
+                let v = (j as f64+ rand::random::<f64>())/(image_height as f64 - 1.0);
+                let ray :Ray = cam.get_ray(u, v);
+                pixel_color += ray_color(&ray, &world);
             }
-            else {
-                *pixel = image::Rgb([0 ,0 ,((1.0- y as f64/height as f64)*255.0) as u8]);
-            }
-            
+
+            let pixel: &mut image::Rgb<u8> = img.get_pixel_mut(i, j);
+            white_color(pixel, pixel_color,samples_per_pixel);
         }
     }
 
-    img.save("output/my_first_sphere.png").unwrap();
+    img.save("output/camera.png").unwrap();
+
 }
 
-fn black_white_picture() {
-    let x = Vec3::new(1.0, 1.0, 1.0);
-    println!("{:?}", x);
-
-    let mut img: RgbImage = ImageBuffer::new(1024, 512);
-    let bar = ProgressBar::new(1024);
-
-    for x in 0..1024 {
-        for y in 0..512 {
-            let pixel = img.get_pixel_mut(x, y);
-            let color = (x / 4) as u8;
-            *pixel = image::Rgb([color, color, color]);
-        }
-        bar.inc(1);
-    }
-
-    img.save("output/test.png").unwrap();
-    bar.finish();
+fn clamp(x:f64,min:f64,max:f64)->f64{
+    if x < min {return min;}
+    else if x>max {return max;}
+    else {return x;}
+}
+fn degrees_to_radians(degrees:f64)->f64 {
+    return degrees * std::f64::consts::PI / 180.0;
 }
 
-fn colorful_picture() {
-    let x = Vec3::new(1.0, 1.0, 1.0);
-    println!("{:?}", x);
-
-    let mut img: RgbImage = ImageBuffer::new(1024, 1024);
-    let bar = ProgressBar::new(1024);
-
-    for x in 0..1024 {
-        for y in 0..1024 {
-            let pixel = img.get_pixel_mut(x, y);
-            let red = (x / 4) as u8;
-            let green = (y / 4) as u8;
-            let blue = (256 / 4) as u8;
-            // println!("Red = {} Green = {} Blue = {}",red,green,blue);
-            *pixel = image::Rgb([red, green, blue]);
-        }
-        bar.inc(1);
-    }
-
-    img.save("output/color.png").unwrap();
-    bar.finish();
+fn random_f64() -> f64{
+    return rand::random::<f64>();
 }
-fn draw_fireworks_gif(){
-    let thr1 = std::thread::spawn(|| {
-        for n in 0..20{
-            fireworks_gif(n)
-        }
+
+fn random_in_range(min:f64,max:f64) -> f64{
+    return min + (max-min) * rand::random::<f64>();
+}
+
+fn ray_color(ray:&Ray,world:&dyn Hittable) -> Vec3 {
+    let mut rec:HitRecord = HitRecord::zero();
+    if world.hit(&ray,0.0,std::f64::INFINITY,& mut rec){
+        return (rec.normal+Vec3::new(1.0,1.0,1.0))*0.5;
     }
-    );
-    let thr2 = std::thread::spawn(|| {
-        for n in 20..40{
-            fireworks_gif(n)
-        }
+    else {
+        let unit_direction: Vec3 = ray.dir.unit();
+        let t = 0.5*(unit_direction.y+1.0);
+        return Vec3::new(1.0,1.0,1.0)*(1.0-t)+Vec3::new(0.5,0.7,1.0)*t;
     }
-    );
-    let thr3 = std::thread::spawn(|| {
-        for n in 40..60{
-            fireworks_gif(n)
-        }
-    }
-    );
-    let thr4 = std::thread::spawn(|| {
-        for n in 60..80{
-            fireworks_gif(n)
-        }
-    }
-    );
-    let thr5 = std::thread::spawn(|| {
-        for n in 80..100{
-            fireworks_gif(n)
-        }
-    }
-    );
-    let thr6 = std::thread::spawn(|| {
-        for n in 100..120{
-            fireworks_gif(n)
-        }
-    }
-    );
-    let thr7 = std::thread::spawn(|| {
-        for n in 120..140{
-            fireworks_gif(n)
-        }
-    }
-    );
+}
+
+fn white_color(pixel: &mut image::Rgb<u8>, pixel_color :Vec3,samples_per_pixel: u32){
+    let mut r = pixel_color.x/samples_per_pixel as f64;
+    let mut g = pixel_color.y/samples_per_pixel as f64;
+    let mut b = pixel_color.z/samples_per_pixel as f64;
+
+    *pixel = image::Rgb([
+        (256.0 *clamp(r, 0.0, 0.999)) as u8 ,
+        (256.0 *clamp(g, 0.0, 0.999)) as u8 ,
+        (256.0 *clamp(b, 0.0, 0.999)) as u8 
+    ]);
     
-    thr1.join().unwrap();
-    thr2.join().unwrap();
-    thr3.join().unwrap();
-    thr4.join().unwrap();
-    thr5.join().unwrap();
-    thr6.join().unwrap();
-    thr7.join().unwrap();
-    return;
-}
-fn fireworks_gif(t:i32){
-    let vy0: f64 = -1.0;
-    let vr0: f64 = 0.18;
-    let g: f64 = 0.01;
-    let yt: f64 = vy0* t as f64 + 0.5*g* (t*t)as f64;
-    let rt: f64 = vr0* t as f64;
-    paint_fireworks(yt, rt, t);
-}
-
-fn paint_fireworks(yt:f64,rt:f64,num:i32) {
-    const N: i32 = 20;
-    let mut img: RgbImage = ImageBuffer::new(1024, 1024);
-    for n1 in 0..N {
-        //theta
-        for n2 in 0..N {
-            //phi
-            let one = Fireworks {
-                r: rt,
-                R: 100.0,
-                y : yt,
-                theta: std::f64::consts::PI * n1 as f64 / (N / 2) as f64,
-                phi: std::f64::consts::PI * n2 as f64 / (N / 2) as f64,
-            };
-            let p = one.set(
-                40.0 / 180.0 * std::f64::consts::PI,
-                40.0 / 180.0 * std::f64::consts::PI,
-                1024,
-                1024,
-            );
-            let pixel = img.get_pixel_mut(p.x, p.y);
-            *pixel = image::Rgb([0, 255 , 0]);
-        }
-    }
-    img.save(format!("fireworks/img{:0>3}.png",num)).unwrap();
-    println!("num = {}",num);
-}
-
-fn ball_gif(){
-    let thr1 = std::thread::spawn(|| {
-        for n in 0..60{
-            paint_ball(30.0*(n as f64/180.0*std::f64::consts::PI ).sin(),n);
-        }
-    }
-    );
-    let thr2 = std::thread::spawn(|| {
-        for n in 60..120{
-            paint_ball(30.0*(n as f64/180.0*std::f64::consts::PI ).sin(),n);
-        }
-    }
-    );
-    let thr3 = std::thread::spawn(|| {
-        for n in 120..180{
-            paint_ball(30.0*(n as f64/180.0*std::f64::consts::PI ).sin(),n);
-        }
-    }
-    );
-    let thr4 = std::thread::spawn(|| {
-        for n in 180..240{
-            paint_ball(30.0*(n as f64/180.0*std::f64::consts::PI ).sin(),n);
-        }
-    }
-    );
-    let thr5 = std::thread::spawn(|| {
-        for n in 240..300{
-            paint_ball(30.0*(n as f64/180.0*std::f64::consts::PI ).sin(),n);
-        }
-    }
-    );
-    let thr6 = std::thread::spawn(|| {
-        for n in 300..360{
-            paint_ball(30.0*(n as f64/180.0*std::f64::consts::PI ).sin(),n);
-        }
-    }
-    );
-    thr1.join().unwrap();
-    thr2.join().unwrap();
-    thr3.join().unwrap();
-    thr4.join().unwrap();
-    thr5.join().unwrap();
-    thr6.join().unwrap();
-}
-
-fn paint_ball(yt:f64,num:u32) {
-    const N: i32 = 200;
-    let mut img: RgbImage = ImageBuffer::new(1024, 1024);
-    for n1 in 0..N {
-        //theta
-        for n2 in 0..N {
-            //phi
-            let one = Fireworks {
-                r: 30.0,
-                R: 100.0,
-                y : yt,
-                theta: std::f64::consts::PI * n1 as f64 / (N / 2) as f64,
-                phi: std::f64::consts::PI * n2 as f64 / (N / 2) as f64,
-            };
-            let p = one.set(
-                40.0 / 180.0 * std::f64::consts::PI,
-                40.0 / 180.0 * std::f64::consts::PI,
-                1024,
-                1024,
-            );
-            let pixel = img.get_pixel_mut(p.x, p.y);
-            *pixel = image::Rgb([(255.0*(num as f64/180.0*std::f64::consts::PI).sin()) as u8 , (255.0*(num as f64/180.0*std::f64::consts::PI+60.0).sin()) as u8 , (255.0*(num as f64/180.0*std::f64::consts::PI+120.0).sin()) as u8 ]);
-        }
-    }
-    img.save(format!("output/gif{:0>3}.png",num)).unwrap();
-    println!("num = {}",num);
 }
