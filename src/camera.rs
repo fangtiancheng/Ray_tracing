@@ -8,13 +8,15 @@ pub struct Camera{
 }
 
 impl Camera {
-    pub fn standard() -> Self{//创造一个标准照相机
+    /// 创造一个标准16:9照相机
+    pub fn standard() -> Self{
         let aspect_ratio:f64 = 16.0 / 9.0;
         let viewport_height:f64 = 2.0;
         let viewport_width:f64 = aspect_ratio * viewport_height;
         let focal_length:f64 = 1.0;
+        // lower_left_corner = origin - horizontal/2 - vertical/2 - vec3(0, 0, focal_length);
         return Self {
-            origin: Vec3::new(0.0, 0.0, 0.0),
+            origin: Vec3::zero(),
             lower_left_corner: Vec3::new(-viewport_width/2.0,- viewport_height/2.0,-focal_length),
             horizontal: Vec3::new(viewport_width, 0.0, 0.0),
             vertical : Vec3::new(0.0, viewport_height, 0.0),
@@ -26,5 +28,5 @@ impl Camera {
             dir: self.lower_left_corner+self.horizontal*u+self.vertical*v-self.origin,
         };
     }
-    
+
 }

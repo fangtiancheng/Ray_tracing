@@ -7,7 +7,13 @@ pub struct Ray{
 }
 
 impl Ray{
-    pub fn at(self , t:f64) -> Vec3 {
+    pub fn new(o:Vec3,d:Vec3)->Self {
+        return Self{
+            orig:o,
+            dir:d,
+        };
+    }
+    pub fn at(&self , t:f64) -> Vec3 {
         return self.orig+self.dir*t;
     }
 

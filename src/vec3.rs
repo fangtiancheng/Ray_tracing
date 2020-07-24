@@ -1,4 +1,5 @@
 use std::ops::{Add, AddAssign};
+use crate::utility::*;
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub struct Vec3 {
@@ -19,7 +20,28 @@ impl Vec3 {
     pub fn zero() -> Self {
         Self::new(0.0, 0.0, 0.0)
     }
-
+    pub fn random()->Self {
+        return Self{
+            x: rand::random(),
+            y: rand::random(),
+            z: rand::random(),
+        };
+    }
+    pub fn random_in_range(min:f64,max:f64) -> Self{
+        return Self{
+            x: random_in_range(min, max),
+            y: random_in_range(min, max),
+            z: random_in_range(min, max),
+        };
+    }
+    pub fn random_in_unit_sphere()->Self{
+        loop {
+            let p = Self::random();
+            if p.squared_length() < 1.0{
+                return p;
+            }
+        }
+    }
     pub fn squared_length(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
