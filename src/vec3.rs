@@ -34,13 +34,23 @@ impl Vec3 {
             z: random_in_range(min, max),
         };
     }
-    pub fn random_in_unit_sphere()->Self{
+    pub fn random_in_unit_sphere() -> Self {
         loop {
             let p = Self::random();
             if p.squared_length() < 1.0{
                 return p;
             }
         }
+    }
+    pub fn random_unit_vector() -> Self {
+        let a = random_in_range(0.0,2.0*std::f64::consts::PI);
+        let z = random_in_range(-1.0,1.0);
+        let r = (1.0-z*z).sqrt();
+        return Self{
+            x: r*a.cos(),
+            y: r*a.sin(),
+            z: z,
+        };
     }
     pub fn squared_length(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
