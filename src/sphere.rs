@@ -37,18 +37,24 @@ impl Hittable for Sphere{//多态
             if root1 < t_max && root1 > t_min {
                 rec.t = root1;
                 rec.p = ray.at(root1);
+                rec.normal = (rec.p - self.center)/self.radius;
+                rec.front_face = rec.normal * ray.dir < 0.0;
+                if !rec.front_face {
+                    rec.normal = -rec.normal;
+                }
+                return true;
             }
             else if root2 < t_max && root2 > t_min {
                 rec.t = root2;
                 rec.p = ray.at(root2);
+                rec.normal = (rec.p - self.center)/self.radius;
+                rec.front_face = rec.normal * ray.dir < 0.0;
+                if !rec.front_face {
+                    rec.normal = -rec.normal;
+                }
+                return true;
             }
-
-            rec.normal = (rec.p - self.center)/self.radius;
-            rec.front_face = rec.normal * ray.dir < 0.0;
-            if !rec.front_face {
-                rec.normal = -rec.normal;
-            }
-            return true;
-        }   
+        }
+        return false;
     }
 }

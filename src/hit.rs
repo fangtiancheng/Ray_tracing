@@ -1,11 +1,13 @@
 use crate::vec3::Vec3;
 use crate::ray::Ray;
+use crate::material::*;
 
 pub struct HitRecord{
     pub p :Vec3,//碰撞点
     pub normal: Vec3,//法线方向
     pub t : f64,//碰撞时间
     pub front_face:bool,//是否从球外面射入
+    // pub mat_ptr: Box<dyn Material>,
 }
 impl HitRecord {
     pub fn clone(other:&Self)->Self{
@@ -14,6 +16,7 @@ impl HitRecord {
             normal: other.normal,
             t: other.t,
             front_face: other.front_face,
+            // mat_ptr: ,
         };
     }
     pub fn zero() -> Self {
@@ -22,6 +25,7 @@ impl HitRecord {
             normal: Vec3::zero(),
             t: 0.0,
             front_face: false,
+            // mat_ptr: Box::new(),
         };
     }
 }
