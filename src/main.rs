@@ -18,7 +18,50 @@ pub use sphere::Sphere;
 pub use camera::Camera;
 use indicatif::ProgressBar;
 use std::sync::Arc;
-fn main() {
+fn main(){
+    // Image
+    const aspect_ratio :f64 = 16.0 / 9.0;
+    const image_width :u32 = 400;
+    const image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
+    const samples_per_pixel :u32 = 100;
+    const max_depth:i32 = 50;
+    // World
+    let R = (std::f64::consts::PI/4.0).cos();
+    let mut world:HittableList = HittableList::new();
+    let  material_left   = Arc::new(Lambertian{
+        albedo: Vec3::new(0.0,0.0,1.0),
+    });
+    let  material_right  = Arc::new(Lambertian{
+        albedo: Vec3::new(1.0,0.0,0.0),
+    });
+    world.objects.push( Box::new( Sphere::new(Vec3::new( -R, 0.0, -1.0), R, material_left)));
+    world.objects.push( Box::new( Sphere::new(Vec3::new( R, 0.0, -1.0), R, material_right)));
+
+    // Camera
+    let cam: Camera = Camera::new(90.0,aspect_ratio);
+    let bar = ProgressBar::new(image_height as u64);
+
+    // Render
+    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
+    for j in 0..image_height {
+        for i in 0..image_width {
+            let mut pixel_color= Vec3::zero();
+            for s in 0..samples_per_pixel {//随机采样
+                let u = (i as f64+ rand::random::<f64>())/(image_width as f64 - 1.0);
+                let v = (j as f64+ rand::random::<f64>())/(image_height as f64 - 1.0);
+                let ray :Ray = cam.get_ray(u, v);
+                pixel_color += ray_color3(&ray, &world,max_depth);
+            }
+
+            let pixel: &mut image::Rgb<u8> = img.get_pixel_mut(i, j);
+            grey_color(pixel, &pixel_color,samples_per_pixel);
+        }
+        bar.inc(1);
+    }
+    img.save("output/camera.png").unwrap();
+    bar.finish();
+}
+fn main10() {
     // Image
     const aspect_ratio :f64 = 16.0 / 9.0;
     const image_width :u32 = 400;
@@ -31,28 +74,21 @@ fn main() {
     let  material_ground = Arc::new(Lambertian{
         albedo: Vec3::new(0.8, 0.8, 0.0)
     });
-    // let  material_center = Arc::new(Lambertian{
-    //     albedo: Vec3::new(0.7, 0.3, 0.3)
-    // });
-    let  material_center = Arc::new(Dielectric{
-        ref_idx: 1.5,
+    let  material_center = Arc::new(Lambertian{
+        albedo: Vec3::new(0.1, 0.2, 0.5)
     });
-
-    // let  material_left   = Arc::new(Metal{
-    //     albedo: Vec3::new(0.8, 0.8, 0.8),
-    //     fuzz : 0.3,
-    // });
     let  material_left   = Arc::new(Dielectric{
         ref_idx : 1.5,
     });
     let  material_right  = Arc::new(Metal{
         albedo: Vec3::new(0.8, 0.6, 0.2),
-        fuzz : 0.3,
+        fuzz : 0.0,
     });
 
     world.objects.push( Box::new( Sphere::new(Vec3::new( 0.0, -100.5, -1.0), 100.0, material_ground)));
     world.objects.push( Box::new( Sphere::new(Vec3::new( 0.0, 0.0, -1.0), 0.5, material_center)));
-    world.objects.push( Box::new( Sphere::new(Vec3::new( -1.0, 0.0, -1.0), 0.5, material_left)));
+    world.objects.push( Box::new( Sphere::new(Vec3::new( -1.0, 0.0, -1.0), 0.5, material_left.clone())));
+    world.objects.push( Box::new( Sphere::new(Vec3::new( -1.0, 0.0, -1.0), -0.4, material_left)));
     world.objects.push( Box::new( Sphere::new(Vec3::new( 1.0, 0.0, -1.0), 0.5, material_right)));
     
     // Bar

@@ -59,14 +59,25 @@ pub struct Dielectric{
 impl Material for Dielectric{
     fn scatter(&self,ray_in: &Ray,rec: &HitRecord,attenuation: &mut Vec3,scattered: &mut Ray)->bool{
         *attenuation = Vec3::ones();
-        let etai_over_etat;
-        if rec.front_face {
-            etai_over_etat = 1.0 / self.ref_idx;
-        }
-        else{
-            etai_over_etat = self.ref_idx;
-        }
+        let etai_over_etat:f64;
+        if rec.front_face {etai_over_etat = 1.0 / self.ref_idx;}
+        else{etai_over_etat = self.ref_idx;}
+
         let unit_direction = ray_in.dir.unit();
+
+        let cos_theta: f64 = fmin(-unit_direction*rec.normal,1.0);
+        let sin_theta: f64 = (1.0-cos_theta*cos_theta).sqrt();
+        if etai_over_etat*sin_theta >1.0 {
+            let reflected = reflect(unit_direction, rec.normal);
+            *scattered = Ray::new(rec.p, reflected);
+            return true;
+        }
+        let reflect_prob = schlick(cos_theta, etai_over_etat);
+        if random_f64() < reflect_prob {
+            let reflected = reflect(unit_direction, rec.normal);
+            *scattered = Ray::new(rec.p,reflected);
+            return true;
+        }
         let refracted = refract(unit_direction, rec.normal, etai_over_etat);
         *scattered = Ray::new(rec.p,refracted);
         return true;
