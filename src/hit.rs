@@ -1,32 +1,34 @@
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::material::*;
+use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct HitRecord{
     pub p :Vec3,//碰撞点
     pub normal: Vec3,//法线方向
     pub t : f64,//碰撞时间
     pub front_face:bool,//是否从球外面射入
-    // pub mat_ptr: Box<dyn Material>,
+    pub mat_ptr: Arc<dyn Material>,//材质
 }
 impl HitRecord {
-    pub fn clone(other:&Self)->Self{
-        return Self {
-            p: other.p,
-            normal: other.normal,
-            t: other.t,
-            front_face: other.front_face,
-            // mat_ptr: ,
-        };
-    }
-    pub fn zero() -> Self {
+    pub fn new(mp: Arc<dyn Material>) -> Self {
         return Self{
             p: Vec3::zero(),
             normal: Vec3::zero(),
             t: 0.0,
             front_face: false,
-            // mat_ptr: Box::new(),
+            mat_ptr: mp,
         };
+    }
+    pub fn set_face_normal(&mut self,ray: &Ray,outward_normal: Vec3){
+        self.front_face = (ray.dir*outward_normal) < 0.0;
+        if self.front_face{
+            self.normal = outward_normal;
+        }
+        else {
+            self.normal = -outward_normal;
+        }
     }
 }
 pub trait Hittable {
@@ -36,7 +38,7 @@ pub struct HittableList{
     pub objects: Vec<Box<dyn Hittable> >,
 }
 impl HittableList {
-    pub fn zero() ->Self {
+    pub fn new() ->Self {
         return HittableList{
             objects: Vec::new(),
         };
