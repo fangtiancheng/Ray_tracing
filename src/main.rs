@@ -14,12 +14,10 @@ pub use vec3::Vec3;
 pub use ray::Ray;
 pub use hit::*;
 pub use utility::*;
-pub use sphere::Sphere;
+pub use sphere::*;
 pub use camera::Camera;
 use indicatif::ProgressBar;
 use std::thread;
-use std::rc::Rc;
-use std::sync::mpsc;
 use std::sync::Mutex;
 use std::sync::Arc;
 
@@ -35,11 +33,11 @@ static mut static_world:HittableList = HittableList{
 static mut cam:Camera = Camera::zero();
 fn main() {
     // Image
-    const aspect_ratio :f64 = 3.0 / 2.0;
-    const image_width :u32 = 1200;
+    const aspect_ratio :f64 = 16.0 / 9.0;
+    const image_width :u32 = 400;
     const image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
     const samples_per_pixel :u32 = 100;
-    const max_depth:i32 = 10;
+    const max_depth:i32 = 50;
     // World
     // static  world:HittableList = random_scene();
 
@@ -50,14 +48,14 @@ fn main() {
     let dist_to_focus:f64 = 10.0;
     let aperture = 0.1;
     unsafe {
-        cam = Camera::new(lookfrom,lookat,vup,20.0,aspect_ratio,aperture,dist_to_focus);
+        cam = Camera::new(lookfrom,lookat,vup,20.0,aspect_ratio,aperture,dist_to_focus,0.0,1.0);
         static_world = random_scene();
     }
     println!("创建世界和相机完毕！");
     // Render
     let mut mutex_img= Arc::new(Mutex::new(ImageBuffer::new(image_width, image_height)));
     // 多线程
-    const THRNUM: i32 = 8;//线程数量
+    const THRNUM: i32 = 16;//线程数量
     let mut thrpool = Vec::new();
     for thi in 0..THRNUM{
         let from = (thi as f64/THRNUM as  f64 *image_height as f64) as u32;
@@ -90,7 +88,7 @@ fn main() {
     for thr in thrpool{
         thr.join().unwrap();
     }
-    mutex_img.lock().unwrap().save("output/camera.png").unwrap();
+    mutex_img.lock().unwrap().save("output/moving_sphere.png").unwrap();
 }
 
 fn ray_color(ray:&Ray,world:&dyn Hittable,depth: i32) -> Vec3 {
@@ -103,7 +101,7 @@ fn ray_color(ray:&Ray,world:&dyn Hittable,depth: i32) -> Vec3 {
     }));
 
     if world.hit(&ray,0.001,std::f64::INFINITY,& mut rec){
-        let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero());
+        let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero(),0.0);
         let mut attenuation: Vec3 = Vec3::zero();
         if rec.mat_ptr.scatter(ray, &rec, &mut attenuation, &mut scattered) {
             return Vec3::elemul(attenuation,ray_color(&scattered, world, depth-1));
@@ -129,7 +127,7 @@ fn ray_color_static(ray:&Ray,depth: i32) -> Vec3 {
     }));
     unsafe {
         if static_world.hit(&ray,0.001,std::f64::INFINITY,& mut rec){
-            let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero());
+            let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero(),0.0);
             let mut attenuation: Vec3 = Vec3::zero();
             if rec.mat_ptr.scatter(ray, &rec, &mut attenuation, &mut scattered) {
                 return Vec3::elemul(attenuation,ray_color_static(&scattered, depth-1));
@@ -189,7 +187,8 @@ fn random_scene() -> HittableList{
                     sphere_material = Arc::new(Lambertian{
                         albedo: albedo,
                     });
-                    world.objects.push(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    let center2 = center + Vec3::new(0.0,random_in_range(0.0, 0.5),0.0);
+                    world.objects.push(Box::new(MovingSphere::new(center, center2,0.0,1.0,0.2, sphere_material)));
                 }
                 else {
                     if choose_mat < 0.95 {
