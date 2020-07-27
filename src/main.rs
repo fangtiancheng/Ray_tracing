@@ -7,6 +7,8 @@ mod ray;
 mod sphere;
 mod camera;
 mod hit;
+mod aabb;
+mod texture;
 mod material;
 use image::{ImageBuffer, RgbImage};
 use material::*;
@@ -16,16 +18,11 @@ pub use hit::*;
 pub use utility::*;
 pub use sphere::*;
 pub use camera::Camera;
+pub use texture::*;
 use indicatif::ProgressBar;
 use std::thread;
 use std::sync::Mutex;
 use std::sync::Arc;
-
-struct Message{
-    x:u32,
-    y:u32,
-    color:Vec3,
-}
 
 static mut static_world:HittableList = HittableList{
     objects: Vec::new(),
@@ -34,7 +31,7 @@ static mut cam:Camera = Camera::zero();
 fn main() {
     // Image
     const aspect_ratio :f64 = 16.0 / 9.0;
-    const image_width :u32 = 400;
+    const image_width :u32 = 1200;
     const image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
     const samples_per_pixel :u32 = 100;
     const max_depth:i32 = 50;
@@ -96,9 +93,9 @@ fn ray_color(ray:&Ray,world:&dyn Hittable,depth: i32) -> Vec3 {
         return Vec3::zero();
     }
 
-    let mut rec:HitRecord = HitRecord::new(Arc::new(Lambertian{
-        albedo: Vec3::zero(),
-    }));
+    let mut rec:HitRecord = HitRecord::new(Arc::new(Lambertian::new_by_color(
+        Vec3::zero(),
+    )));
 
     if world.hit(&ray,0.001,std::f64::INFINITY,& mut rec){
         let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero(),0.0);
@@ -122,9 +119,9 @@ fn ray_color_static(ray:&Ray,depth: i32) -> Vec3 {
         return Vec3::zero();
     }
 
-    let mut rec:HitRecord = HitRecord::new(Arc::new(Lambertian{
-        albedo: Vec3::zero(),
-    }));
+    let mut rec:HitRecord = HitRecord::new(Arc::new(Lambertian::new_by_color(
+        Vec3::zero(),
+    )));
     unsafe {
         if static_world.hit(&ray,0.001,std::f64::INFINITY,& mut rec){
             let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero(),0.0);
@@ -168,11 +165,14 @@ fn grey_color(pixel: &mut image::Rgb<u8>, pixel_color :&Vec3,samples_per_pixel: 
 
 fn random_scene() -> HittableList{
     let mut world = HittableList::new();
+    let checker = Arc::new(CheckerTexture::new_by_color(
+        Vec3::new(0.2,0.3,0.1), Vec3::new(0.9,0.9,0.9)));
+    world.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0),-1000.0,Arc::new(Lambertian::new(checker)))));
 
-    let ground_material = Arc::new(Lambertian{
-        albedo: Vec3::new(0.5,0.5,0.5),
-    });
-    world.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
+    // let ground_material = Arc::new(Lambertian::new_by_color(
+    //     Vec3::new(0.5,0.5,0.5),
+    // ));
+    // world.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
     
     for a in -11..11 {
         for b in -11..11 {
@@ -184,17 +184,17 @@ fn random_scene() -> HittableList{
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Vec3::elemul(Vec3::random(), Vec3::random());
-                    sphere_material = Arc::new(Lambertian{
-                        albedo: albedo,
-                    });
-                    let center2 = center + Vec3::new(0.0,random_in_range(0.0, 0.5),0.0);
+                    sphere_material = Arc::new(Lambertian::new_by_color(
+                        albedo
+                    ));
+                    let center2 = center + Vec3::new(0.0,random_in_range_f64(0.0, 0.5),0.0);
                     world.objects.push(Box::new(MovingSphere::new(center, center2,0.0,1.0,0.2, sphere_material)));
                 }
                 else {
                     if choose_mat < 0.95 {
                         // metal
                         let albedo = Vec3::random_in_range(0.5, 1.0);
-                        let fuzz = random_in_range(0.0, 0.5);
+                        let fuzz = random_in_range_f64(0.0, 0.5);
                         sphere_material = Arc::new(Metal{
                             albedo: albedo, fuzz: fuzz,
                         });
@@ -216,9 +216,7 @@ fn random_scene() -> HittableList{
     });
     world.objects.push(Box::new(Sphere::new(Vec3::new(0.0,1.0,0.0),1.0,material1)));
     
-    let material2 = Arc::new(Lambertian{
-        albedo: Vec3::new(0.4,0.2,0.1),
-    });
+    let material2 = Arc::new(Lambertian::new_by_color( Vec3::new(0.4,0.2,0.1)));
     world.objects.push(Box::new(Sphere::new(Vec3::new(-4.0,1.0,0.0),1.0,material2)));
 
     let material3 = Arc::new(Metal{
