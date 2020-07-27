@@ -33,9 +33,9 @@ impl Vec3 {
     }
     pub fn random_in_range(min:f64,max:f64) -> Self{
         return Self{
-            x: random_in_range(min, max),
-            y: random_in_range(min, max),
-            z: random_in_range(min, max),
+            x: random_in_range_f64(min, max),
+            y: random_in_range_f64(min, max),
+            z: random_in_range_f64(min, max),
         };
     }
     pub fn random_in_unit_sphere() -> Self {
@@ -47,8 +47,8 @@ impl Vec3 {
         }
     }
     pub fn random_unit_vector() -> Self {
-        let a = random_in_range(0.0,2.0*std::f64::consts::PI);
-        let z = random_in_range(-1.0,1.0);
+        let a = random_in_range_f64(0.0,2.0*std::f64::consts::PI);
+        let z = random_in_range_f64(-1.0,1.0);
         let r = (1.0-z*z).sqrt();
         return Self{
             x: r*a.cos(),
@@ -71,6 +71,14 @@ impl Vec3 {
     }
     pub fn length(&self) -> f64 {
         return ((self.x * self.x + self.y * self.y + self.z * self.z) as f64).sqrt();
+    }
+    pub fn get(&self,idx: i32)->f64{
+        match idx {
+            0 => return self.x,
+            1 => return self.y,
+            2 => return self.z,
+            _ => panic!("index out of bound")
+        }
     }
     /// # Panics
     /// Panic if Self == {0.0 , 0.0 , 0.0}

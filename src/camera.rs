@@ -61,7 +61,7 @@ impl Camera {
         return Ray{
             orig: self.origin + offset,
             dir: self.lower_left_corner+self.horizontal*s+self.vertical*t-self.origin-offset,
-            tm: random_in_range(self.time0, self.time1),
+            tm: random_in_range_f64(self.time0, self.time1),
         };
     }
 
