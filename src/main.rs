@@ -18,20 +18,30 @@ pub use sphere::Sphere;
 pub use camera::Camera;
 use indicatif::ProgressBar;
 use std::thread;
+use std::rc::Rc;
+use std::sync::mpsc;
+use std::sync::Mutex;
 use std::sync::Arc;
 
+struct Message{
+    x:u32,
+    y:u32,
+    color:Vec3,
+}
+
+static mut static_world:HittableList = HittableList{
+    objects: Vec::new(),
+};
+static mut cam:Camera = Camera::zero();
 fn main() {
     // Image
     const aspect_ratio :f64 = 3.0 / 2.0;
     const image_width :u32 = 1200;
     const image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
-    const samples_per_pixel :u32 = 500;
-    const max_depth:i32 = 50;
+    const samples_per_pixel :u32 = 100;
+    const max_depth:i32 = 10;
     // World
-    let mut world:HittableList = random_scene();
-
-    // Bar
-    let bar = ProgressBar::new(image_height as u64);
+    // static  world:HittableList = random_scene();
 
     // Camera
     let lookfrom = Vec3::new(13.0,2.0,3.0);
@@ -39,31 +49,48 @@ fn main() {
     let vup = Vec3::new(0.0,1.0,0.0);
     let dist_to_focus:f64 = 10.0;
     let aperture = 0.1;
-    let cam: Camera = Camera::new(lookfrom,lookat,vup,20.0,aspect_ratio,aperture,dist_to_focus);
-
-    // Render
-    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
-    for j in 0..image_height {
-        for i in 0..image_width {
-            let mut pixel_color= Vec3::zero();
-            for s in 0..samples_per_pixel {//随机采样
-                let u = (i as f64+ rand::random::<f64>())/(image_width as f64 - 1.0);
-                let v = (j as f64+ rand::random::<f64>())/(image_height as f64 - 1.0);
-                let ray :Ray = cam.get_ray(u, v);
-                pixel_color += ray_color(&ray, &world,max_depth);
-            }
-
-            let pixel: &mut image::Rgb<u8> = img.get_pixel_mut(i, j);
-            grey_color(pixel, &pixel_color,samples_per_pixel);
-        }
-        bar.inc(1);
+    unsafe {
+        cam = Camera::new(lookfrom,lookat,vup,20.0,aspect_ratio,aperture,dist_to_focus);
+        static_world = random_scene();
     }
-
-    img.save("output/camera.png").unwrap();
-    bar.finish();
-}
-fn th(from:i32,to:i32){
-
+    println!("创建世界和相机完毕！");
+    // Render
+    let mut mutex_img= Arc::new(Mutex::new(ImageBuffer::new(image_width, image_height)));
+    // 多线程
+    const THRNUM: i32 = 8;//线程数量
+    let mut thrpool = Vec::new();
+    for thi in 0..THRNUM{
+        let from = (thi as f64/THRNUM as  f64 *image_height as f64) as u32;
+        let to = ((thi+1) as f64/THRNUM as  f64 *image_height as f64) as u32;
+        let mut mutex_img = Arc::clone(&mutex_img);
+        let thr = thread::spawn(move ||{
+            for j in from..to {
+                for i in 0..image_width {
+                    let mut pixel_color= Vec3::zero();
+                    for s in 0..samples_per_pixel {//随机采样
+                        let u = (i as f64+ rand::random::<f64>())/(image_width as f64 - 1.0);
+                        let v = (j as f64+ rand::random::<f64>())/(image_height as f64 - 1.0);
+                        unsafe {
+                            let ray :Ray = cam.get_ray(u, v);
+                            pixel_color += ray_color_static(&ray,max_depth);
+                        }// unsafe
+                    }
+                    // Write Back
+                    let mut img= mutex_img.lock().unwrap();
+                    let pixel = img.get_pixel_mut(i, j);
+                    grey_color(pixel, &pixel_color,samples_per_pixel);
+                }
+                println!("j = {} in {} to {}",j,from,to);
+            }
+            
+        });
+        thrpool.push(thr);
+        println!("创建第 {} 个线程完毕",thi);
+    }
+    for thr in thrpool{
+        thr.join().unwrap();
+    }
+    mutex_img.lock().unwrap().save("output/camera.png").unwrap();
 }
 
 fn ray_color(ray:&Ray,world:&dyn Hittable,depth: i32) -> Vec3 {
@@ -92,6 +119,32 @@ fn ray_color(ray:&Ray,world:&dyn Hittable,depth: i32) -> Vec3 {
     }
 }
 
+fn ray_color_static(ray:&Ray,depth: i32) -> Vec3 {
+    if depth <= 0{
+        return Vec3::zero();
+    }
+
+    let mut rec:HitRecord = HitRecord::new(Arc::new(Lambertian{
+        albedo: Vec3::zero(),
+    }));
+    unsafe {
+        if static_world.hit(&ray,0.001,std::f64::INFINITY,& mut rec){
+            let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero());
+            let mut attenuation: Vec3 = Vec3::zero();
+            if rec.mat_ptr.scatter(ray, &rec, &mut attenuation, &mut scattered) {
+                return Vec3::elemul(attenuation,ray_color_static(&scattered, depth-1));
+            }
+            else {
+                return Vec3::zero();
+            }
+        }
+        else {
+            let unit_direction: Vec3 = ray.dir.unit();
+            let t = 0.5*(unit_direction.y+1.0);
+            return Vec3::ones()*(1.0-t)+Vec3::new(0.5,0.7,1.0)*t;
+        }
+    }// unsafe
+}
 fn white_color(pixel: &mut image::Rgb<u8>, pixel_color :&Vec3,samples_per_pixel: u32){
     let r = pixel_color.x/samples_per_pixel as f64;
     let g = pixel_color.y/samples_per_pixel as f64;

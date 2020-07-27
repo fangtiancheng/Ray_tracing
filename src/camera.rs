@@ -36,6 +36,18 @@ impl Camera {
             lens_radius: aperture/2.0,
         };
     }
+    pub const fn zero()->Self{
+        return Self{
+            origin: Vec3::zero(),
+            lower_left_corner: Vec3::zero(),
+            horizontal: Vec3::zero(),
+            vertical: Vec3::zero(),
+            u: Vec3::zero(),
+            v: Vec3::zero(),
+            w: Vec3::zero(),
+            lens_radius: 0.0,
+        };
+    }
     pub fn get_ray(&self,s:f64,t:f64) -> Ray{
         let rd: Vec3 = random_in_unit_disk()*self.lens_radius;
         let offset = self.u * rd.x + self.v * rd.y;
