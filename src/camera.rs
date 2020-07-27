@@ -6,40 +6,43 @@ pub struct Camera{
     pub lower_left_corner: Vec3,
     pub horizontal: Vec3,
     pub vertical: Vec3,
+    pub u: Vec3,
+    pub v: Vec3,
+    pub w: Vec3,
+    pub lens_radius: f64,
 }
 
 impl Camera {
-    /// 创造一个标准16:9照相机
-    pub fn standard() -> Self{
-        let aspect_ratio:f64 = 16.0 / 9.0;
-        let viewport_height:f64 = 2.0;
-        let viewport_width:f64 = aspect_ratio * viewport_height;
-        let focal_length:f64 = 1.0;
-        // lower_left_corner = origin - horizontal/2 - vertical/2 - vec3(0, 0, focal_length);
-        return Self {
-            origin: Vec3::zero(),
-            lower_left_corner: Vec3::new(-viewport_width/2.0,- viewport_height/2.0,-focal_length),
-            horizontal: Vec3::new(viewport_width, 0.0, 0.0),
-            vertical : Vec3::new(0.0, viewport_height, 0.0),
-        };
-    }
-    pub fn new(vfov: f64,aspect_ratio: f64) -> Self {
+    pub fn new(lookfrom: Vec3,lookat: Vec3,vup: Vec3,vfov: f64,
+        aspect_ratio: f64,aperture: f64,focus_dist: f64) -> Self {
         let theta = degrees_to_radians(vfov);
         let h = (theta/2.0).tan();
         let viewport_height = 2.0*h;
         let viewport_width = aspect_ratio * viewport_height;
         let focal_length:f64 = 1.0;
+
+        let w = (lookfrom - lookat).unit();
+        let u = Vec3::cross(vup, w).unit();
+        let v = Vec3::cross(w, u);
+        let horizontal:Vec3 =  u*viewport_width*focus_dist;
+        let vertical:Vec3 = v*viewport_height*focus_dist;
+        let origin:Vec3 = lookfrom;
         return Self{
-            origin: Vec3::zero(),
-            lower_left_corner: Vec3::new(-viewport_width/2.0,- viewport_height/2.0,-focal_length),
-            horizontal: Vec3::new(viewport_width, 0.0, 0.0),
-            vertical : Vec3::new(0.0, viewport_height, 0.0),
+            origin: origin,
+            lower_left_corner: origin - horizontal/2.0 - vertical/2.0-w*focus_dist,
+            horizontal: horizontal,
+            vertical : vertical,
+            u : u,v : v,w : w,
+            lens_radius: aperture/2.0,
         };
     }
-    pub fn get_ray(&self,u:f64,v:f64) -> Ray{
+    pub fn get_ray(&self,s:f64,t:f64) -> Ray{
+        let rd: Vec3 = random_in_unit_disk()*self.lens_radius;
+        let offset = self.u * rd.x + self.v * rd.y;
+
         return Ray{
-            orig: self.origin,
-            dir: self.lower_left_corner+self.horizontal*u+self.vertical*v-self.origin,
+            orig: self.origin + offset,
+            dir: self.lower_left_corner+self.horizontal*s+self.vertical*t-self.origin-offset,
         };
     }
 
