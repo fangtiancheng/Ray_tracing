@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, Neg};
 use crate::utility::*;
 
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -124,7 +124,7 @@ impl AddAssign<f64> for Vec3 {
     }
 }
 
-impl std::ops::Sub for Vec3 {
+impl Sub for Vec3 {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
@@ -136,7 +136,7 @@ impl std::ops::Sub for Vec3 {
     }
 }
 
-impl std::ops::SubAssign for Vec3 {
+impl SubAssign for Vec3 {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x - other.x,
@@ -146,7 +146,7 @@ impl std::ops::SubAssign for Vec3 {
     }
 }
 
-impl std::ops::Sub<f64> for Vec3 {
+impl Sub<f64> for Vec3 {
     type Output = Self;
 
     fn sub(self, other: f64) -> Self {
@@ -158,7 +158,7 @@ impl std::ops::Sub<f64> for Vec3 {
     }
 }
 
-impl std::ops::SubAssign<f64> for Vec3 {
+impl SubAssign<f64> for Vec3 {
     //重载 -= f64
     fn sub_assign(&mut self, other: f64) {
         *self = Self {
@@ -169,7 +169,7 @@ impl std::ops::SubAssign<f64> for Vec3 {
     }
 }
 
-impl std::ops::Mul for Vec3 {
+impl Mul for Vec3 {
     type Output = f64;
 
     fn mul(self, other: Self) -> f64 {
@@ -177,7 +177,7 @@ impl std::ops::Mul for Vec3 {
     }
 }
 
-impl std::ops::MulAssign<f64> for Vec3 {
+impl MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, other: f64) {
         *self = Self {
             x: self.x * other,
@@ -187,7 +187,7 @@ impl std::ops::MulAssign<f64> for Vec3 {
     }
 }
 
-impl std::ops::Mul<f64> for Vec3 {
+impl Mul<f64> for Vec3 {
     type Output = Self;
 
     fn mul(self, other: f64) -> Self {
@@ -199,7 +199,7 @@ impl std::ops::Mul<f64> for Vec3 {
     }
 }
 
-impl std::ops::Div<f64> for Vec3 {
+impl Div<f64> for Vec3 {
     type Output = Self;
 
     fn div(self, other: f64) -> Self {
@@ -211,7 +211,7 @@ impl std::ops::Div<f64> for Vec3 {
     }
 }
 
-impl std::ops::Neg for Vec3 {
+impl Neg for Vec3 {
     type Output = Self;
 
     fn neg(self) -> Self {

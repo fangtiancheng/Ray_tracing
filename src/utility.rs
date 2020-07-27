@@ -41,6 +41,14 @@ pub fn schlick(cosin: f64,ref_idx: f64)-> f64 {
     return r0 + (1.0-r0)*(1.0-cosin).powf(5.0);
 }
 
+pub fn random_in_unit_disk()->Vec3{
+    loop{
+        let p = Vec3::new(random_in_range(-1.0, 1.0),random_in_range(-1.0,1.0),0.0);
+        if p.squared_length() >= 1.0{continue;}
+        else {return p;}
+    }
+}
+
 /// # 浮点数的较小值
 pub fn fmin(x: f64,y: f64)->f64{
     if x<y {x} else{y}
