@@ -211,3 +211,4 @@ pub fn box_z_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
     }
     return Ordering::Equal;
 }
+

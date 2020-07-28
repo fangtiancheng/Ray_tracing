@@ -43,23 +43,35 @@ fn main() {
     // static  world:HittableList = random_scene();
 
     // Camera
-    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
-    let lookat = Vec3::zero();
+    let mut lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let mut lookat = Vec3::zero();
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus: f64 = 10.0;
-    let aperture: f64;
-    let vfov: f64 = 20.0;
+    let mut aperture: f64 = 0.0;
+    let mut vfov: f64 = 40.0;
+    let mut background :Vec3 = Vec3::zero();
     unsafe {
         match 0 {
             1 => {
                 println!("==========RANDOM SCENE==========");
                 static_world = random_scene();
                 aperture = 0.1;
+                background = Vec3::new(0.7,0.8,1.0);
+                vfov = 20.0;
             }
-            _ => {
+            2 => {
                 println!("==========TWO SPHERE==========");
                 static_world = two_spheres();
+                background = Vec3::new(0.7,0.8,1.0);
                 aperture = 0.0;
+                vfov = 20.0;
+            }
+            _ => {
+                println!("==========SIMPLE LIGHT===========");
+                static_world = simple_light();
+                lookfrom = Vec3::new(26.0,3.0,6.0);
+                lookat = Vec3::new(0.0,2.0,0.0);
+                vfov = 20.0;
             }
         }
         cam = Camera::new(
@@ -94,7 +106,7 @@ fn main() {
                         let v = (j as f64 + rand::random::<f64>()) / (image_height as f64 - 1.0);
                         unsafe {
                             let ray: Ray = cam.get_ray(u, v);
-                            pixel_color += ray_color_static(&ray, max_depth);
+                            pixel_color += ray_color_static(&ray, &background,max_depth);
                         } // unsafe
                     }
                     // Write Back
@@ -143,7 +155,7 @@ fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
     }
 }
 
-fn ray_color_static(ray: &Ray, depth: i32) -> Vec3 {
+fn ray_color_static(ray: &Ray, background: &Vec3,depth: i32) -> Vec3 {
     if depth <= 0 {
         return Vec3::zero();
     }
@@ -151,20 +163,20 @@ fn ray_color_static(ray: &Ray, depth: i32) -> Vec3 {
     let mut rec: HitRecord = HitRecord::new(Arc::new(Lambertian::new_by_color(Vec3::zero())));
     unsafe {
         if static_world.hit(&ray, 0.001, std::f64::INFINITY, &mut rec) {
-            let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero(), 0.0);
+            let mut scattered: Ray = Ray::zero();
             let mut attenuation: Vec3 = Vec3::zero();
+            let emitted = rec.mat_ptr.emitted(rec.u, rec.v, &rec.p);
             if rec
                 .mat_ptr
                 .scatter(ray, &rec, &mut attenuation, &mut scattered)
             {
-                return Vec3::elemul(attenuation, ray_color_static(&scattered, depth - 1));
+                return emitted+Vec3::elemul(attenuation,ray_color_static(&scattered, background, depth-1));
             } else {
-                return Vec3::zero();
+                return emitted;
             }
-        } else {
-            let unit_direction: Vec3 = ray.dir.unit();
-            let t = 0.5 * (unit_direction.y + 1.0);
-            return Vec3::ones() * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t;
+        }
+        else {
+            return background.clone();
         }
     } // unsafe
 }

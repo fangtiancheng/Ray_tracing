@@ -110,3 +110,17 @@ pub fn two_spheres() -> HittableList {
     )));
     return objects;
 }
+
+pub fn simple_light() -> HittableList{
+    let mut objects: HittableList = HittableList::new();
+
+    let pertext = Arc::new(SolidColor::new(Vec3::new(0.8,0.8,0.8)));
+    objects.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0),1000.0,Arc::new(Lambertian::new(pertext)))));
+
+    let difflight = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0,4.0,4.0)));
+    let lamber = Arc::new(Lambertian::new_by_color(Vec3::new(0.8,0.8,0.8)));
+    objects.objects.push(Box::new(Sphere::new(Vec3::new(0.0,2.0,0.0),1.0,difflight)));
+    objects.objects.push(Box::new(Sphere::new(Vec3::new(0.0,2.0,3.0),1.0,lamber)));
+    
+    return objects;
+}
