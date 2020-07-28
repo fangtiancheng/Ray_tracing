@@ -5,6 +5,7 @@ mod point;
 mod utility;
 mod ray;
 mod sphere;
+mod scene;
 mod camera;
 mod hit;
 mod aabb;
@@ -19,6 +20,7 @@ pub use utility::*;
 pub use sphere::*;
 pub use camera::Camera;
 pub use texture::*;
+pub use scene::*;
 use indicatif::ProgressBar;
 use std::thread;
 use std::sync::Mutex;
@@ -40,13 +42,26 @@ fn main() {
 
     // Camera
     let lookfrom = Vec3::new(13.0,2.0,3.0);
-    let lookat = Vec3::new(0.0,0.0,-0.0);
+    let lookat = Vec3::zero();
     let vup = Vec3::new(0.0,1.0,0.0);
     let dist_to_focus:f64 = 10.0;
-    let aperture = 0.1;
+    let aperture:f64 ;
+    let vfov:f64 = 20.0;
     unsafe {
-        cam = Camera::new(lookfrom,lookat,vup,20.0,aspect_ratio,aperture,dist_to_focus,0.0,1.0);
-        static_world = random_scene();
+        match 0{
+            1 => {
+                println!("==========RANDOM SCENE==========");
+                static_world = random_scene();
+                aperture = 0.1;
+            },
+            _ => {
+                println!("==========TWO SPHERE==========");
+                static_world = two_spheres();
+                aperture = 0.0;
+            }
+
+        }
+        cam = Camera::new(lookfrom,lookat,vup,vfov,aspect_ratio,aperture,dist_to_focus,0.0,1.0);
     }
     println!("创建世界和相机完毕！");
     // Render
@@ -85,7 +100,7 @@ fn main() {
     for thr in thrpool{
         thr.join().unwrap();
     }
-    mutex_img.lock().unwrap().save("output/moving_sphere.png").unwrap();
+    mutex_img.lock().unwrap().save("output/checkered_sphere.png").unwrap();
 }
 
 fn ray_color(ray:&Ray,world:&dyn Hittable,depth: i32) -> Vec3 {
@@ -148,7 +163,7 @@ fn white_color(pixel: &mut image::Rgb<u8>, pixel_color :&Vec3,samples_per_pixel:
     *pixel = image::Rgb([
         (256.0 *clamp(r, 0.0, 0.999)) as u8 ,
         (256.0 *clamp(g, 0.0, 0.999)) as u8 ,
-        (256.0 *clamp(b, 0.0, 0.999)) as u8 
+        (256.0 *clamp(b, 0.0, 0.999)) as u8 ,
     ]);
 }
 fn grey_color(pixel: &mut image::Rgb<u8>, pixel_color :&Vec3,samples_per_pixel: u32){
@@ -163,67 +178,4 @@ fn grey_color(pixel: &mut image::Rgb<u8>, pixel_color :&Vec3,samples_per_pixel: 
     ]);
 }
 
-fn random_scene() -> HittableList{
-    let mut world = HittableList::new();
-    let checker = Arc::new(CheckerTexture::new_by_color(
-        Vec3::new(0.2,0.3,0.1), Vec3::new(0.9,0.9,0.9)));
-    world.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0),-1000.0,Arc::new(Lambertian::new(checker)))));
 
-    // let ground_material = Arc::new(Lambertian::new_by_color(
-    //     Vec3::new(0.5,0.5,0.5),
-    // ));
-    // world.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
-    
-    for a in -11..11 {
-        for b in -11..11 {
-            let choose_mat = random_f64();
-            let center = Vec3::new(a as f64 + 0.9*random_f64(),0.2,b as f64 + 0.9*random_f64());
-            if (center - Vec3::new(4.0,0.4,0.0)).length() > 0.9 {
-                let sphere_material : Arc<dyn Material>;
-
-                if choose_mat < 0.8 {
-                    // diffuse
-                    let albedo = Vec3::elemul(Vec3::random(), Vec3::random());
-                    sphere_material = Arc::new(Lambertian::new_by_color(
-                        albedo
-                    ));
-                    let center2 = center + Vec3::new(0.0,random_in_range_f64(0.0, 0.5),0.0);
-                    world.objects.push(Box::new(MovingSphere::new(center, center2,0.0,1.0,0.2, sphere_material)));
-                }
-                else {
-                    if choose_mat < 0.95 {
-                        // metal
-                        let albedo = Vec3::random_in_range(0.5, 1.0);
-                        let fuzz = random_in_range_f64(0.0, 0.5);
-                        sphere_material = Arc::new(Metal{
-                            albedo: albedo, fuzz: fuzz,
-                        });
-                        world.objects.push(Box::new(Sphere::new(center,0.2,sphere_material)));
-                    }
-                    else {
-                        // glass
-                        sphere_material = Arc::new(Dielectric{
-                            ref_idx: 1.5,
-                        });
-                        world.objects.push(Box::new(Sphere::new(center,0.2,sphere_material)));
-                    }
-                }
-            }
-        }
-    }
-    let material1 = Arc::new(Dielectric{
-        ref_idx: 1.5,
-    });
-    world.objects.push(Box::new(Sphere::new(Vec3::new(0.0,1.0,0.0),1.0,material1)));
-    
-    let material2 = Arc::new(Lambertian::new_by_color( Vec3::new(0.4,0.2,0.1)));
-    world.objects.push(Box::new(Sphere::new(Vec3::new(-4.0,1.0,0.0),1.0,material2)));
-
-    let material3 = Arc::new(Metal{
-        albedo: Vec3::new(0.7,0.6,0.5),
-        fuzz: 0.0,
-    });
-    world.objects.push(Box::new(Sphere::new(Vec3::new(4.0,1.0,0.0),1.0,material3)));
-
-    return world;
-}
