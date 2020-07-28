@@ -11,7 +11,7 @@ mod sphere;
 mod texture;
 mod utility;
 mod vec3;
-// mod perlin;
+mod perlin;
 pub use camera::Camera;
 pub use hit::*;
 use image::{ImageBuffer, RgbImage};
@@ -22,7 +22,7 @@ pub use sphere::*;
 pub use texture::*;
 pub use utility::*;
 pub use vec3::Vec3;
-// pub use perlin::*;
+pub use perlin::*;
 use indicatif::ProgressBar;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -35,7 +35,7 @@ static mut cam: Camera = Camera::zero();
 fn main() {
     // Image
     const aspect_ratio: f64 = 16.0 / 9.0;
-    const image_width: u32 = 1200;
+    const image_width: u32 = 2000;
     const image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
     const samples_per_pixel: u32 = 100;
     const max_depth: i32 = 50;
@@ -49,31 +49,42 @@ fn main() {
     let dist_to_focus: f64 = 10.0;
     let mut aperture: f64 = 0.0;
     let mut vfov: f64 = 40.0;
-    let mut background :Vec3 = Vec3::zero();
+    let mut background: Vec3 = Vec3::zero();
     unsafe {
-        match 0 {
+        match 3 {
             1 => {
                 println!("==========RANDOM SCENE==========");
                 static_world = random_scene();
                 aperture = 0.1;
-                background = Vec3::new(0.7,0.8,1.0);
+                background = Vec3::new(0.7, 0.8, 1.0);
                 vfov = 20.0;
             }
             2 => {
                 println!("==========TWO SPHERE==========");
                 static_world = two_spheres();
-                background = Vec3::new(0.7,0.8,1.0);
+                background = Vec3::new(0.7, 0.8, 1.0);
                 aperture = 0.0;
+                vfov = 20.0;
+            }
+            3 => {
+                println!("==========RANDOM SCENE WITH LIGHT==========");
+                static_world = random_scene_with_light();
+                aperture = 0.0;
+                background = Vec3::new(0.7, 0.8, 1.0);
+                lookfrom = Vec3::new(26.0, 3.0, 6.0);
+                lookat = Vec3::new(0.0, 2.0, 0.0);
                 vfov = 20.0;
             }
             _ => {
                 println!("==========SIMPLE LIGHT===========");
                 static_world = simple_light();
-                lookfrom = Vec3::new(26.0,3.0,6.0);
-                lookat = Vec3::new(0.0,2.0,0.0);
+                lookfrom = Vec3::new(26.0, 3.0, 6.0);
+                lookat = Vec3::new(0.0, 2.0, 0.0);
+                background = Vec3::new(0.7, 0.8, 1.0);
                 vfov = 20.0;
             }
         }
+        background = Vec3::zero();
         cam = Camera::new(
             lookfrom,
             lookat,
@@ -106,7 +117,7 @@ fn main() {
                         let v = (j as f64 + rand::random::<f64>()) / (image_height as f64 - 1.0);
                         unsafe {
                             let ray: Ray = cam.get_ray(u, v);
-                            pixel_color += ray_color_static(&ray, &background,max_depth);
+                            pixel_color += ray_color_static(&ray, &background, max_depth);
                         } // unsafe
                     }
                     // Write Back
@@ -155,7 +166,7 @@ fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
     }
 }
 
-fn ray_color_static(ray: &Ray, background: &Vec3,depth: i32) -> Vec3 {
+fn ray_color_static(ray: &Ray, background: &Vec3, depth: i32) -> Vec3 {
     if depth <= 0 {
         return Vec3::zero();
     }
@@ -170,12 +181,15 @@ fn ray_color_static(ray: &Ray, background: &Vec3,depth: i32) -> Vec3 {
                 .mat_ptr
                 .scatter(ray, &rec, &mut attenuation, &mut scattered)
             {
-                return emitted+Vec3::elemul(attenuation,ray_color_static(&scattered, background, depth-1));
+                return emitted
+                    + Vec3::elemul(
+                        attenuation,
+                        ray_color_static(&scattered, background, depth - 1),
+                    );
             } else {
                 return emitted;
             }
-        }
-        else {
+        } else {
             return background.clone();
         }
     } // unsafe

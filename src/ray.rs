@@ -14,12 +14,12 @@ impl Ray {
             tm: time,
         };
     }
-    pub const fn zero()->Self{
-        return Self{
+    pub const fn zero() -> Self {
+        return Self {
             orig: Vec3::zero(),
             dir: Vec3::zero(),
             tm: 0.0,
-        }
+        };
     }
     pub fn at(&self, t: f64) -> Vec3 {
         return self.orig + self.dir * t;
