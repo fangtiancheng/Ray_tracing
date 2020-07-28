@@ -24,8 +24,8 @@ impl Fireworks {
                 + (((self.r * self.theta.cos() * self.phi.sin() / len).asin() / theta_x0)
                     * (middle_x as f64)) as i32) as u32,
             y: (middle_y
-                + ((((self.r * self.theta.sin()+self.y) / len).atan() / theta_y0) * (middle_y as f64))
-                    as i32) as u32,
+                + ((((self.r * self.theta.sin() + self.y) / len).atan() / theta_y0)
+                    * (middle_y as f64)) as i32) as u32,
         };
     }
 }

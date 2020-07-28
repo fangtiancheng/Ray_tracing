@@ -1,5 +1,5 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, Neg};
 use crate::utility::*;
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub struct Vec3 {
@@ -14,25 +14,29 @@ impl Vec3 {
     }
 
     pub const fn ones() -> Self {
-        return Self{
-            x:1.0,y:1.0,z:1.0
+        return Self {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
         };
     }
 
     pub const fn zero() -> Self {
-        return Self{
-            x:0.0, y:0.0, z:0.0
+        return Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         };
     }
-    pub fn random()->Self {
-        return Self{
+    pub fn random() -> Self {
+        return Self {
             x: rand::random(),
             y: rand::random(),
             z: rand::random(),
         };
     }
-    pub fn random_in_range(min:f64,max:f64) -> Self{
-        return Self{
+    pub fn random_in_range(min: f64, max: f64) -> Self {
+        return Self {
             x: random_in_range_f64(min, max),
             y: random_in_range_f64(min, max),
             z: random_in_range_f64(min, max),
@@ -41,18 +45,18 @@ impl Vec3 {
     pub fn random_in_unit_sphere() -> Self {
         loop {
             let p = Self::random();
-            if p.squared_length() < 1.0{
+            if p.squared_length() < 1.0 {
                 return p;
             }
         }
     }
     pub fn random_unit_vector() -> Self {
-        let a = random_in_range_f64(0.0,2.0*std::f64::consts::PI);
-        let z = random_in_range_f64(-1.0,1.0);
-        let r = (1.0-z*z).sqrt();
-        return Self{
-            x: r*a.cos(),
-            y: r*a.sin(),
+        let a = random_in_range_f64(0.0, 2.0 * std::f64::consts::PI);
+        let z = random_in_range_f64(-1.0, 1.0);
+        let r = (1.0 - z * z).sqrt();
+        return Self {
+            x: r * a.cos(),
+            y: r * a.sin(),
             z: z,
         };
     }
@@ -72,12 +76,12 @@ impl Vec3 {
     pub fn length(&self) -> f64 {
         return ((self.x * self.x + self.y * self.y + self.z * self.z) as f64).sqrt();
     }
-    pub fn get(&self,idx: i32)->f64{
+    pub fn get(&self, idx: i32) -> f64 {
         match idx {
             0 => return self.x,
             1 => return self.y,
             2 => return self.z,
-            _ => panic!("index out of bound")
+            _ => panic!("index out of bound"),
         }
     }
     /// # Panics
