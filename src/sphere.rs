@@ -1,7 +1,9 @@
 use crate::aabb::*;
 use crate::hit::*;
 use crate::material::*;
+use crate::perlin::*;
 use crate::ray::*;
+use crate::texture::*;
 use crate::utility::*;
 use crate::vec3::Vec3;
 use std::sync::Arc;

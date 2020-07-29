@@ -1,5 +1,5 @@
 use crate::{
-    aabb::*, camera::*, hit::*, material::*, ray::*, sphere::*, texture::*, utility::*, vec3::*,
+    aabb::*, camera::*, hit::*, material::*, ray::*, sphere::*, texture::*, utility::*, vec3::*,rectangle::*,
 };
 pub fn random_scene() -> HittableList {
     let mut world = HittableList::new();
@@ -179,7 +179,8 @@ pub fn random_scene_with_light() -> HittableList {
                         //     albedo: albedo,
                         //     fuzz: fuzz,
                         // });
-                        let sphere_material = Arc::new(DiffuseLight::new(Arc::new(SolidColor::new(albedo))));
+                        let sphere_material =
+                            Arc::new(DiffuseLight::new(Arc::new(SolidColor::new(albedo))));
                         world
                             .objects
                             .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
@@ -224,4 +225,44 @@ pub fn random_scene_with_light() -> HittableList {
     )));
 
     return world;
+}
+
+pub fn two_perlin_spheres() -> HittableList {
+    let mut objects = HittableList::new();
+    let pertext = Arc::new(NoiseTexture::new());
+
+    objects.objects.push(Box::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::new(Lambertian::new(pertext.clone())),
+    )));
+    objects.objects.push(Box::new(Sphere::new(
+        Vec3::new(0.0, 2.0, 0.0),
+        2.0,
+        Arc::new(Lambertian::new(pertext.clone())),
+    )));
+    return objects;
+}
+pub fn earth() -> HittableList {
+    let mut objects = HittableList::new();
+    let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from(
+        "src/cky.jpg",
+    )));
+    let earth_surface = Arc::new(Lambertian::new(earth_texture));
+    objects
+        .objects
+        .push(Box::new(Sphere::new(Vec3::zero(), 4.5, earth_surface)));
+    return objects;
+}
+
+pub fn rectangle_light() -> HittableList{
+    let mut objects = HittableList::new();
+    let pertext = Arc::new(SolidColor::new(Vec3::new(0.0,0.8,0.0)));
+    let lamb = Arc::new(Lambertian::new(pertext));
+    objects.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0),1000.0,lamb.clone())));
+    objects.objects.push(Box::new(Sphere::new(Vec3::new(0.0,2.0,0.0),2.0,lamb.clone())));
+
+    let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0,4.0,4.0)));
+    objects.objects.push(Box::new(XY_Rect::new(3.0,5.0,1.0,3.0,-2.0,diff_light)));
+    return objects;
 }

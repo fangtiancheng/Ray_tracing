@@ -1,2 +1,13 @@
 /target
 /output
+/Ray Tracing in One Weekend_files
+*.pdf
+*.exe
+*.cpp
+*.py
+*.gif
+*.png
+*.jpg
+*.gif
+*.mp4
+*.html
