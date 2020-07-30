@@ -16,11 +16,11 @@ pub struct XyRect {
 impl XyRect {
     pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Arc<dyn Material>) -> Self {
         return Self {
-            x0: x0,
-            x1: x1,
-            y0: y0,
-            y1: y1,
-            k: k,
+            x0,
+            x1,
+            y0,
+            y1,
+            k,
             mp: mat,
         };
     }

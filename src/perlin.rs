@@ -16,7 +16,7 @@ impl Perlin {
             ranfloat.push(random_f64());
         }
         return Self {
-            ranfloat: ranfloat,
+            ranfloat,
             perm_x: Self::perlin_generate_perm(),
             perm_y: Self::perlin_generate_perm(),
             perm_z: Self::perlin_generate_perm(),
@@ -34,10 +34,10 @@ impl Perlin {
         let mut i: usize = n - 1;
         while i > 0 {
             let target = random_in_range_i32(0, i as i32) as usize;
-            let tmp = p[i];
-            p[i] = p[target];
-            p[target] = tmp;
-
+            // let tmp = p[i];
+            // p[i] = p[target];
+            // p[target] = tmp;
+            p.swap(i, target);
             i -= 1;
         }
     }

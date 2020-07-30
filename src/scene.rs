@@ -49,8 +49,8 @@ pub fn random_scene() -> HittableList {
                         let albedo = Vec3::random_in_range(0.5, 1.0);
                         let fuzz = random_in_range_f64(0.0, 0.5);
                         sphere_material = Arc::new(Metal {
-                            albedo: albedo,
-                            fuzz: fuzz,
+                            albedo,
+                            fuzz,
                         });
                         world
                             .objects
@@ -240,7 +240,7 @@ pub fn two_perlin_spheres() -> HittableList {
     objects.objects.push(Box::new(Sphere::new(
         Vec3::new(0.0, 2.0, 0.0),
         2.0,
-        Arc::new(Lambertian::new(pertext.clone())),
+        Arc::new(Lambertian::new(pertext)),
     )));
     return objects;
 }

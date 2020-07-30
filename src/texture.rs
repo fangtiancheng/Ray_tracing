@@ -72,7 +72,7 @@ pub struct ImageTexture {
     pub data: ImageBuffer<image::Rgb<u8>, std::vec::Vec<u8>>,
 }
 impl ImageTexture {
-    pub fn new_by_pathstr(dir: &String) -> Self {
+    pub fn new_by_pathstr(dir: &str) -> Self {
         return Self {
             data: image::open(&Path::new(dir)).unwrap().to_rgb(),
         };

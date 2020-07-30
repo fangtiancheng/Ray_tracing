@@ -1,19 +1,16 @@
+#![allow(clippy::float_cmp,clippy::needless_return)]
 extern crate image;
-// #[allow(clippy::needless_return)]
-#[allow(clippy::float_cmp,clippy::needless_return)]
 extern crate rand;
 mod aabb;
 mod camera;
 mod hit;
 mod material;
 mod perlin;
-mod point;
 mod ray;
 mod rectangle;
 mod scene;
 mod sphere;
 mod texture;
-mod toys;
 mod utility;
 mod vec3;
 pub use camera::Camera;
@@ -30,7 +27,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 pub use texture::*;
-pub use toys::naive;
 pub use utility::*;
 pub use vec3::Vec3;
 
@@ -46,9 +42,9 @@ pub struct ThreadMessage {
 impl ThreadMessage {
     pub fn new(x: u32, y: u32, color: Vec3) -> Self {
         return Self {
-            x: x,
-            y: y,
-            color: color,
+            x,
+            y,
+            color,
         };
     }
 }
@@ -56,7 +52,7 @@ fn main() {
     // return;
     // Image
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: u32 = 1000;
+    const IMAGE_WIDTH: u32 = 10;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
     const SAMPLES_PER_PIXEL: u32 = 300;
     const MAX_DEPTH: i32 = 50;
@@ -239,7 +235,7 @@ fn ray_color_static(ray: &Ray, background: &Vec3, depth: i32) -> Vec3 {
                 return emitted;
             }
         } else {
-            return background.clone();
+            return *background;
         }
     } // unsafe
 }
