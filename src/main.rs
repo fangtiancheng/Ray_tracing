@@ -105,7 +105,7 @@ fn main() {
                 background = Vec3::new(0.7, 0.8, 1.0);
                 vfov = 20.0;
             }
-            5 => {
+            _ => {
                 println!("==========NOISE TEXTURE===========");
                 STATIC_WORLD = two_perlin_spheres();
                 background = Vec3::new(0.7, 0.8, 1.0);
@@ -121,14 +121,14 @@ fn main() {
             //     lookat = Vec3::zero();
             //     vfov = 20.0;
             // }
-            _ => {
-                println!("==========RECTANGEL LIGHT===========");
-                STATIC_WORLD = rectangle_light();
-                background = Vec3::zero();
-                lookfrom = Vec3::new(26.0, 3.0, 6.0);
-                lookat = Vec3::zero();
-                vfov = 20.0;
-            }
+            // _ => {
+            //     println!("==========RECTANGEL LIGHT===========");
+            //     STATIC_WORLD = rectangle_light();
+            //     background = Vec3::zero();
+            //     lookfrom = Vec3::new(26.0, 3.0, 6.0);
+            //     lookat = Vec3::zero();
+            //     vfov = 20.0;
+            // }
         }
         CAM = Camera::new(
             lookfrom,

@@ -248,26 +248,26 @@ pub fn earth() -> HittableList {
     return objects;
 }
 
-pub fn rectangle_light() -> HittableList {
-    let mut objects = HittableList::new();
-    let pertext = Arc::new(SolidColor::new(Vec3::new(0.0, 0.8, 0.0)));
-    let lamb = Arc::new(Lambertian::new(pertext));
-    // let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
-    // let earth_surface = Arc::new(Lambertian::new(earth_texture));
-    objects.objects.push(Box::new(Sphere::new(
-        Vec3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        lamb.clone(),
-    )));
-    objects.objects.push(Box::new(Sphere::new(
-        Vec3::new(0.0, 2.0, 0.0),
-        2.0,
-        lamb,
-    )));
+// pub fn rectangle_light() -> HittableList {
+//     let mut objects = HittableList::new();
+//     let pertext = Arc::new(SolidColor::new(Vec3::new(0.0, 0.8, 0.0)));
+//     let lamb = Arc::new(Lambertian::new(pertext));
+//     // let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
+//     // let earth_surface = Arc::new(Lambertian::new(earth_texture));
+//     objects.objects.push(Box::new(Sphere::new(
+//         Vec3::new(0.0, -1000.0, 0.0),
+//         1000.0,
+//         lamb.clone(),
+//     )));
+//     objects.objects.push(Box::new(Sphere::new(
+//         Vec3::new(0.0, 2.0, 0.0),
+//         2.0,
+//         lamb,
+//     )));
 
-    let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0, 4.0, 4.0)));
-    objects
-        .objects
-        .push(Box::new(XyRect::new(3.0, 5.0, 1.0, 3.0, -2.0, diff_light)));
-    return objects;
-}
+//     let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0, 4.0, 4.0)));
+//     objects
+//         .objects
+//         .push(Box::new(XyRect::new(3.0, 5.0, 1.0, 3.0, -2.0, diff_light)));
+//     return objects;
+// }
