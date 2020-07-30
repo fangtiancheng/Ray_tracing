@@ -1,7 +1,6 @@
 use crate::ray::*;
 use crate::utility::*;
 use crate::vec3::*;
-use std::sync::Arc;
 #[derive(Clone, Copy, PartialEq)]
 pub struct AABB {
     pub _min: Vec3,

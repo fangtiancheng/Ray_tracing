@@ -1,5 +1,5 @@
 use crate::{
-    aabb::*, camera::*, hit::*, material::*, ray::*, rectangle::*, sphere::*, texture::*,
+    hit::*, material::*, rectangle::*, sphere::*, texture::*,
     utility::*, vec3::*,
 };
 pub fn random_scene() -> HittableList {
@@ -274,6 +274,6 @@ pub fn rectangle_light() -> HittableList {
     let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0, 4.0, 4.0)));
     objects
         .objects
-        .push(Box::new(XY_Rect::new(3.0, 5.0, 1.0, 3.0, -2.0, diff_light)));
+        .push(Box::new(XyRect::new(3.0, 5.0, 1.0, 3.0, -2.0, diff_light)));
     return objects;
 }

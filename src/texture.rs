@@ -22,7 +22,7 @@ impl SolidColor {
     }
 }
 impl Texture for SolidColor {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn value(&self, _u: f64, _v: f64, _p: &Vec3) -> Vec3 {
         return self.color_value;
     }
 }
@@ -64,7 +64,7 @@ impl NoiseTexture {
     }
 }
 impl Texture for NoiseTexture {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn value(&self, _u: f64, _v: f64, p: &Vec3) -> Vec3 {
         return Vec3::ones() * self.noise.noise(p);
     }
 }
@@ -85,7 +85,7 @@ impl ImageTexture {
     }
 }
 impl Texture for ImageTexture {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn value(&self, u: f64, v: f64, _p: &Vec3) -> Vec3 {
         let u = clamp(u, 0.0, 1.0);
         let v = 1.0 - clamp(v, 0.0, 1.0);
         let mut i: u32 = (u * self.width() as f64) as u32;
@@ -99,13 +99,13 @@ impl Texture for ImageTexture {
             j = self.height() - 1;
         }
 
-        const color_scale: f64 = 1.0 / 255.0;
+        const COLOR_SCALE: f64 = 1.0 / 255.0;
         let pixel = self.data.get_pixel(i, j);
         let [r, g, b] = pixel.0;
         return Vec3::new(
-            r as f64 * color_scale,
-            g as f64 * color_scale,
-            b as f64 * color_scale,
+            r as f64 * COLOR_SCALE,
+            g as f64 * COLOR_SCALE,
+            b as f64 * COLOR_SCALE,
         );
     }
 }

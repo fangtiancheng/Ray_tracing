@@ -1,6 +1,5 @@
 use crate::utility::*;
 use crate::vec3::*;
-use std::sync::Arc;
 pub struct Perlin {
     pub ranfloat: Vec<f64>,
     pub perm_x: Vec<usize>,
@@ -9,11 +8,11 @@ pub struct Perlin {
 }
 
 impl Perlin {
-    const point_count: usize = 256;
+    const POINT_COUNT: usize = 256;
 
     pub fn new() -> Self {
         let mut ranfloat = Vec::new();
-        for i in 0..Perlin::point_count {
+        for _i in 0..Perlin::POINT_COUNT {
             ranfloat.push(random_f64());
         }
         return Self {
@@ -25,10 +24,10 @@ impl Perlin {
     }
     pub fn perlin_generate_perm() -> Vec<usize> {
         let mut p = Vec::new();
-        for i in 0..Perlin::point_count {
+        for i in 0..Perlin::POINT_COUNT {
             p.push(i);
         }
-        Self::permute(&mut p, Self::point_count);
+        Self::permute(&mut p, Self::POINT_COUNT);
         return p;
     }
     pub fn permute(p: &mut Vec<usize>, n: usize) {
@@ -46,9 +45,9 @@ impl Perlin {
         // let u = p.x - p.x.floor();
         // let v = p.y - p.y.floor();
         // let w = p.z - p.z.floor();
-        let i = ((4.0 * p.x) as usize) % Self::point_count;
-        let j = ((4.0 * p.y) as usize) % Self::point_count;
-        let k = ((4.0 * p.z) as usize) % Self::point_count;
+        let i = ((4.0 * p.x) as usize) % Self::POINT_COUNT;
+        let j = ((4.0 * p.y) as usize) % Self::POINT_COUNT;
+        let k = ((4.0 * p.z) as usize) % Self::POINT_COUNT;
 
         return self.ranfloat[self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k]];
     }

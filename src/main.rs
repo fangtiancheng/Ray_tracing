@@ -1,6 +1,6 @@
 extern crate image;
-#[allow(clippy::needless_return)]
-#[allow(clippy::float_cmp)]
+// #[allow(clippy::needless_return)]
+#[allow(clippy::float_cmp,clippy::needless_return)]
 extern crate rand;
 mod aabb;
 mod camera;
@@ -19,7 +19,7 @@ mod vec3;
 pub use camera::Camera;
 pub use hit::*;
 pub use image::GenericImage;
-use image::{ImageBuffer, RgbImage};
+use image::ImageBuffer;
 use material::*;
 pub use perlin::*;
 pub use ray::Ray;
@@ -34,10 +34,10 @@ pub use toys::naive;
 pub use utility::*;
 pub use vec3::Vec3;
 
-static mut static_world: HittableList = HittableList {
+static mut STATIC_WORLD: HittableList = HittableList {
     objects: Vec::new(),
 };
-static mut cam: Camera = Camera::zero();
+static mut CAM: Camera = Camera::zero();
 pub struct ThreadMessage {
     pub x: u32,
     pub y: u32,
@@ -53,7 +53,7 @@ impl ThreadMessage {
     }
 }
 fn main() {
-    return;
+    // return;
     // Image
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: u32 = 1000;
@@ -64,32 +64,36 @@ fn main() {
     // static  world:HittableList = random_scene();
 
     // Camera
-    let mut lookfrom = Vec3::new(13.0, 2.0, 3.0);
-    let mut lookat = Vec3::zero();
+    let lookfrom;
+    let lookat;
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus: f64 = 10.0;
     let mut aperture: f64 = 0.0;
-    let mut vfov: f64 = 40.0;
-    let mut background: Vec3 = Vec3::zero();
+    let vfov: f64 ;
+    let background: Vec3 ;
     unsafe {
         match 0 {
             1 => {
                 println!("==========RANDOM SCENE==========");
-                static_world = random_scene();
+                lookfrom = Vec3::new(13.0, 2.0, 3.0);
+                lookat = Vec3::zero();
+                STATIC_WORLD = random_scene();
                 aperture = 0.1;
                 background = Vec3::new(0.7, 0.8, 1.0);
                 vfov = 20.0;
             }
             2 => {
                 println!("==========TWO SPHERE==========");
-                static_world = two_spheres();
+                lookfrom = Vec3::new(13.0, 2.0, 3.0);
+                lookat = Vec3::zero();
+                STATIC_WORLD = two_spheres();
                 background = Vec3::new(0.7, 0.8, 1.0);
                 aperture = 0.0;
                 vfov = 20.0;
             }
             3 => {
                 println!("==========RANDOM SCENE WITH LIGHT==========");
-                static_world = random_scene_with_light();
+                STATIC_WORLD = random_scene_with_light();
                 aperture = 0.0;
                 background = Vec3::zero();
                 lookfrom = Vec3::new(26.0, 15.0, -16.0);
@@ -98,7 +102,7 @@ fn main() {
             }
             4 => {
                 println!("==========SIMPLE LIGHT===========");
-                static_world = simple_light();
+                STATIC_WORLD = simple_light();
                 lookfrom = Vec3::new(26.0, 3.0, 6.0);
                 lookat = Vec3::new(0.0, 2.0, 0.0);
                 background = Vec3::new(0.7, 0.8, 1.0);
@@ -106,7 +110,7 @@ fn main() {
             }
             5 => {
                 println!("==========NOISE TEXTURE===========");
-                static_world = two_perlin_spheres();
+                STATIC_WORLD = two_perlin_spheres();
                 background = Vec3::new(0.7, 0.8, 1.0);
                 lookfrom = Vec3::new(13.0, 2.0, 3.0);
                 lookat = Vec3::zero();
@@ -114,7 +118,7 @@ fn main() {
             }
             6 => {
                 println!("==========EARTH===========");
-                static_world = earth();
+                STATIC_WORLD = earth();
                 background = Vec3::new(0.7, 0.8, 1.0);
                 lookfrom = Vec3::new(26.0, 3.0, 6.0);
                 lookat = Vec3::zero();
@@ -122,14 +126,14 @@ fn main() {
             }
             _ => {
                 println!("==========RECTANGEL LIGHT===========");
-                static_world = rectangle_light();
+                STATIC_WORLD = rectangle_light();
                 background = Vec3::zero();
                 lookfrom = Vec3::new(26.0, 3.0, 6.0);
                 lookat = Vec3::zero();
                 vfov = 20.0;
             }
         }
-        cam = Camera::new(
+        CAM = Camera::new(
             lookfrom,
             lookat,
             vup,
@@ -143,25 +147,25 @@ fn main() {
     }
     println!("创建世界和相机完毕！");
     // Render
-    let mut mutex_img = Arc::new(Mutex::new(ImageBuffer::new(IMAGE_WIDTH, IMAGE_HEIGHT)));
+    let mutex_img = Arc::new(Mutex::new(ImageBuffer::new(IMAGE_WIDTH, IMAGE_HEIGHT)));
     // 多线程
     const THRNUM: i32 = 16; //线程数量
     let mut thrpool = Vec::new();
     for thi in 0..THRNUM {
         let from = (thi as f64 / THRNUM as f64 * IMAGE_HEIGHT as f64) as u32;
         let to = ((thi + 1) as f64 / THRNUM as f64 * IMAGE_HEIGHT as f64) as u32;
-        let mut mutex_img = Arc::clone(&mutex_img);
+        let mutex_img = Arc::clone(&mutex_img);
         let thr = thread::spawn(move || {
             for j in from..to {
                 let mut msg = Vec::new();
                 for i in 0..IMAGE_WIDTH {
                     let mut pixel_color = Vec3::zero();
-                    for s in 0..SAMPLES_PER_PIXEL {
+                    for _s in 0..SAMPLES_PER_PIXEL {
                         //随机采样
                         let u = (i as f64 + rand::random::<f64>()) / (IMAGE_WIDTH as f64 - 1.0);
                         let v = (j as f64 + rand::random::<f64>()) / (IMAGE_HEIGHT as f64 - 1.0);
                         unsafe {
-                            let ray: Ray = cam.get_ray(u, v);
+                            let ray: Ray = CAM.get_ray(u, v);
                             pixel_color += ray_color_static(&ray, &background, MAX_DEPTH);
                         } // unsafe
                     }
@@ -186,30 +190,30 @@ fn main() {
     mutex_img.lock().unwrap().save("output/jzm.png").unwrap();
 }
 
-fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
-    if depth <= 0 {
-        return Vec3::zero();
-    }
+// fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
+//     if depth <= 0 {
+//         return Vec3::zero();
+//     }
 
-    let mut rec: HitRecord = HitRecord::new(Arc::new(Lambertian::new_by_color(Vec3::zero())));
+//     let mut rec: HitRecord = HitRecord::new(Arc::new(Lambertian::new_by_color(Vec3::zero())));
 
-    if world.hit(&ray, 0.001, std::f64::INFINITY, &mut rec) {
-        let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero(), 0.0);
-        let mut attenuation: Vec3 = Vec3::zero();
-        if rec
-            .mat_ptr
-            .scatter(ray, &rec, &mut attenuation, &mut scattered)
-        {
-            return Vec3::elemul(attenuation, ray_color(&scattered, world, depth - 1));
-        } else {
-            return Vec3::zero();
-        }
-    } else {
-        let unit_direction: Vec3 = ray.dir.unit();
-        let t = 0.5 * (unit_direction.y + 1.0);
-        return Vec3::ones() * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t;
-    }
-}
+//     if world.hit(&ray, 0.001, std::f64::INFINITY, &mut rec) {
+//         let mut scattered: Ray = Ray::new(Vec3::zero(), Vec3::zero(), 0.0);
+//         let mut attenuation: Vec3 = Vec3::zero();
+//         if rec
+//             .mat_ptr
+//             .scatter(ray, &rec, &mut attenuation, &mut scattered)
+//         {
+//             return Vec3::elemul(attenuation, ray_color(&scattered, world, depth - 1));
+//         } else {
+//             return Vec3::zero();
+//         }
+//     } else {
+//         let unit_direction: Vec3 = ray.dir.unit();
+//         let t = 0.5 * (unit_direction.y + 1.0);
+//         return Vec3::ones() * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t;
+//     }
+// }
 
 fn ray_color_static(ray: &Ray, background: &Vec3, depth: i32) -> Vec3 {
     if depth <= 0 {
@@ -218,7 +222,7 @@ fn ray_color_static(ray: &Ray, background: &Vec3, depth: i32) -> Vec3 {
 
     let mut rec: HitRecord = HitRecord::new(Arc::new(Lambertian::new_by_color(Vec3::zero())));
     unsafe {
-        if static_world.hit(&ray, 0.001, std::f64::INFINITY, &mut rec) {
+        if STATIC_WORLD.hit(&ray, 0.001, std::f64::INFINITY, &mut rec) {
             let mut scattered: Ray = Ray::zero();
             let mut attenuation: Vec3 = Vec3::zero();
             let emitted = rec.mat_ptr.emitted(rec.u, rec.v, &rec.p);
@@ -239,17 +243,17 @@ fn ray_color_static(ray: &Ray, background: &Vec3, depth: i32) -> Vec3 {
         }
     } // unsafe
 }
-fn white_color(pixel: &mut image::Rgb<u8>, pixel_color: &Vec3, samples_per_pixel: u32) {
-    let r = pixel_color.x / samples_per_pixel as f64;
-    let g = pixel_color.y / samples_per_pixel as f64;
-    let b = pixel_color.z / samples_per_pixel as f64;
+// fn white_color(pixel: &mut image::Rgb<u8>, pixel_color: &Vec3, samples_per_pixel: u32) {
+//     let r = pixel_color.x / samples_per_pixel as f64;
+//     let g = pixel_color.y / samples_per_pixel as f64;
+//     let b = pixel_color.z / samples_per_pixel as f64;
 
-    *pixel = image::Rgb([
-        (256.0 * clamp(r, 0.0, 0.999)) as u8,
-        (256.0 * clamp(g, 0.0, 0.999)) as u8,
-        (256.0 * clamp(b, 0.0, 0.999)) as u8,
-    ]);
-}
+//     *pixel = image::Rgb([
+//         (256.0 * clamp(r, 0.0, 0.999)) as u8,
+//         (256.0 * clamp(g, 0.0, 0.999)) as u8,
+//         (256.0 * clamp(b, 0.0, 0.999)) as u8,
+//     ]);
+// }
 fn write_color(pixel: &mut image::Rgb<u8>, pixel_color: &Vec3, samples_per_pixel: u32) {
     let r = (pixel_color.x / samples_per_pixel as f64).sqrt();
     let g = (pixel_color.y / samples_per_pixel as f64).sqrt();

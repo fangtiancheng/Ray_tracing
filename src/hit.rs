@@ -1,7 +1,6 @@
 use crate::aabb::*;
 use crate::material::*;
 use crate::ray::Ray;
-use crate::utility::*;
 use crate::vec3::Vec3;
 use std::cmp::Ordering;
 use std::sync::Arc;
@@ -88,72 +87,72 @@ impl Hittable for HittableList {
     }
 }
 
-struct BVH_Node {
+struct BvhNode {
     pub left: Arc<dyn Hittable>,
     pub right: Arc<dyn Hittable>,
     pub bvh_box: AABB,
 }
 
-impl BVH_Node {
-    pub fn new(
-        objects: &mut Vec<Arc<dyn Hittable>>,
-        start: usize,
-        end: usize,
-        time0: f64,
-        time1: f64,
-    ) -> Self {
-        let axis = random_in_range_i32(0, 3);
-        let comparator = match axis {
-            0 => box_x_compare,
-            1 => box_y_compare,
-            _ => box_z_compare,
-        };
-        let object_span = end - start;
-        let mut tmp: BVH_Node;
-        if object_span == 1 {
-            tmp = BVH_Node {
-                left: objects[start].clone(),
-                right: objects[start].clone(),
-                bvh_box: AABB::new(Vec3::zero(), Vec3::zero()),
-            };
-        } else if object_span == 2 {
-            if comparator(&objects[start], &objects[start + 1]) == Ordering::Less {
-                tmp = BVH_Node {
-                    left: objects[start].clone(),
-                    right: objects[start + 1].clone(),
-                    bvh_box: AABB::zero(),
-                };
-            } else {
-                tmp = BVH_Node {
-                    left: objects[start + 1].clone(),
-                    right: objects[start].clone(),
-                    bvh_box: AABB::zero(),
-                };
-            }
-        } else {
-            objects.as_mut_slice()[start..end].sort_by(comparator);
-            let mid = start + object_span / 2;
-            tmp = BVH_Node {
-                left: Arc::new(BVH_Node::new(objects, start, mid, time0, time1)),
-                right: Arc::new(BVH_Node::new(objects, mid, end, time0, time1)),
-                bvh_box: AABB::zero(),
-            };
-        }
-        let mut box_left = AABB::zero();
-        let mut box_right = AABB::zero();
+impl BvhNode {
+    // pub fn new(
+    //     objects: &mut Vec<Arc<dyn Hittable>>,
+    //     start: usize,
+    //     end: usize,
+    //     time0: f64,
+    //     time1: f64,
+    // ) -> Self {
+    //     let axis = random_in_range_i32(0, 3);
+    //     let comparator = match axis {
+    //         0 => box_x_compare,
+    //         1 => box_y_compare,
+    //         _ => box_z_compare,
+    //     };
+    //     let object_span = end - start;
+    //     let mut tmp: BvhNode;
+    //     if object_span == 1 {
+    //         tmp = BvhNode {
+    //             left: objects[start].clone(),
+    //             right: objects[start].clone(),
+    //             bvh_box: AABB::new(Vec3::zero(), Vec3::zero()),
+    //         };
+    //     } else if object_span == 2 {
+    //         if comparator(&objects[start], &objects[start + 1]) == Ordering::Less {
+    //             tmp = BvhNode {
+    //                 left: objects[start].clone(),
+    //                 right: objects[start + 1].clone(),
+    //                 bvh_box: AABB::zero(),
+    //             };
+    //         } else {
+    //             tmp = BvhNode {
+    //                 left: objects[start + 1].clone(),
+    //                 right: objects[start].clone(),
+    //                 bvh_box: AABB::zero(),
+    //             };
+    //         }
+    //     } else {
+    //         objects.as_mut_slice()[start..end].sort_by(comparator);
+    //         let mid = start + object_span / 2;
+    //         tmp = BvhNode {
+    //             left: Arc::new(BvhNode::new(objects, start, mid, time0, time1)),
+    //             right: Arc::new(BvhNode::new(objects, mid, end, time0, time1)),
+    //             bvh_box: AABB::zero(),
+    //         };
+    //     }
+    //     let mut box_left = AABB::zero();
+    //     let mut box_right = AABB::zero();
 
-        if !tmp.left.bounding_box(time0, time1, &mut box_left)
-            || !tmp.right.bounding_box(time0, time1, &mut box_right)
-        {
-            panic!("No bounding box in bvh_node constructor.");
-        }
+    //     if !tmp.left.bounding_box(time0, time1, &mut box_left)
+    //         || !tmp.right.bounding_box(time0, time1, &mut box_right)
+    //     {
+    //         panic!("No bounding box in bvh_node constructor.");
+    //     }
 
-        tmp.bvh_box = AABB::surrounding_box(&box_left, &box_right);
-        return tmp;
-    }
+    //     tmp.bvh_box = AABB::surrounding_box(&box_left, &box_right);
+    //     return tmp;
+    // }
 }
 
-impl Hittable for BVH_Node {
+impl Hittable for BvhNode {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         if !self.bvh_box.hit(&ray, t_min, t_max) {
             return false;
@@ -165,7 +164,7 @@ impl Hittable for BVH_Node {
 
         return hit_left || hit_right;
     }
-    fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut AABB) -> bool {
+    fn bounding_box(&self, _t0: f64, _t1: f64, output_box: &mut AABB) -> bool {
         *output_box = self.bvh_box;
         return true;
     }

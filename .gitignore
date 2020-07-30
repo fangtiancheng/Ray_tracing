@@ -1,5 +1,6 @@
 /target
 /output
+/src/rubbish
 /Ray Tracing in One Weekend_files
 *.pdf
 *.exe

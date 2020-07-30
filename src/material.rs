@@ -41,7 +41,7 @@ impl Material for Lambertian {
         *attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         return true;
     }
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn emitted(&self, _u: f64, _v: f64, _p: &Vec3) -> Vec3 {
         return Vec3::zero();
     }
 }
@@ -51,15 +51,15 @@ pub struct Metal {
     pub fuzz: f64,
 }
 impl Metal {
-    pub fn zero() -> Self {
-        return Self {
-            albedo: Vec3::zero(),
-            fuzz: 0.0,
-        };
-    }
-    pub fn new(a: Vec3, f: f64) -> Self {
-        return Self { albedo: a, fuzz: f };
-    }
+    // pub const fn zero() -> Self {
+    //     return Self {
+    //         albedo: Vec3::zero(),
+    //         fuzz: 0.0,
+    //     };
+    // }
+    // pub fn new(a: Vec3, f: f64) -> Self {
+    //     return Self { albedo: a, fuzz: f };
+    // }
 }
 impl Material for Metal {
     fn scatter(
@@ -78,7 +78,7 @@ impl Material for Metal {
         *attenuation = self.albedo;
         return scattered.dir * rec.normal > 0.0;
     }
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn emitted(&self, _u: f64, _v: f64, _p: &Vec3) -> Vec3 {
         return Vec3::zero();
     }
 }
@@ -121,7 +121,7 @@ impl Material for Dielectric {
         *scattered = Ray::new(rec.p, refracted, 0.0);
         return true;
     }
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn emitted(&self, _u: f64, _v: f64, _p: &Vec3) -> Vec3 {
         return Vec3::zero();
     }
 }
@@ -142,10 +142,10 @@ impl DiffuseLight {
 impl Material for DiffuseLight {
     fn scatter(
         &self,
-        ray_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Vec3,
-        scattered: &mut Ray,
+        _ray_in: &Ray,
+        _rec: &HitRecord,
+        _attenuation: &mut Vec3,
+        _scattered: &mut Ray,
     ) -> bool {
         return false;
     }
