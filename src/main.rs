@@ -1,4 +1,9 @@
-#![allow(clippy::float_cmp,clippy::needless_return,clippy::collapsible_if,clippy::too_many_arguments)]
+#![allow(
+    clippy::float_cmp,
+    clippy::needless_return,
+    clippy::collapsible_if,
+    clippy::too_many_arguments
+)]
 extern crate image;
 extern crate rand;
 mod aabb;
@@ -41,11 +46,7 @@ pub struct ThreadMessage {
 }
 impl ThreadMessage {
     pub fn new(x: u32, y: u32, color: Vec3) -> Self {
-        return Self {
-            x,
-            y,
-            color,
-        };
+        return Self { x, y, color };
     }
 }
 fn main() {
@@ -65,10 +66,10 @@ fn main() {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus: f64 = 10.0;
     let mut aperture: f64 = 0.0;
-    let vfov: f64 ;
-    let background: Vec3 ;
+    let vfov: f64;
+    let background: Vec3;
     unsafe {
-        match 6 {
+        match 2 {
             1 => {
                 println!("==========RANDOM SCENE==========");
                 lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -112,14 +113,14 @@ fn main() {
                 lookat = Vec3::zero();
                 vfov = 20.0;
             }
-            6 => {
-                println!("==========EARTH===========");
-                STATIC_WORLD = earth();
-                background = Vec3::new(0.7, 0.8, 1.0);
-                lookfrom = Vec3::new(26.0, 3.0, 6.0);
-                lookat = Vec3::zero();
-                vfov = 20.0;
-            }
+            // 6 => {
+            //     println!("==========EARTH===========");
+            //     STATIC_WORLD = earth();
+            //     background = Vec3::new(0.7, 0.8, 1.0);
+            //     lookfrom = Vec3::new(26.0, 3.0, 6.0);
+            //     lookat = Vec3::zero();
+            //     vfov = 20.0;
+            // }
             _ => {
                 println!("==========RECTANGEL LIGHT===========");
                 STATIC_WORLD = rectangle_light();

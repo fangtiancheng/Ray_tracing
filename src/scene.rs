@@ -1,7 +1,4 @@
-use crate::{
-    hit::*, material::*, rectangle::*, sphere::*, texture::*,
-    utility::*, vec3::*,
-};
+use crate::{hit::*, material::*, rectangle::*, sphere::*, texture::*, utility::*, vec3::*};
 pub fn random_scene() -> HittableList {
     let mut world = HittableList::new();
     let checker = Arc::new(CheckerTexture::new_by_color(
@@ -48,10 +45,7 @@ pub fn random_scene() -> HittableList {
                         // metal
                         let albedo = Vec3::random_in_range(0.5, 1.0);
                         let fuzz = random_in_range_f64(0.0, 0.5);
-                        sphere_material = Arc::new(Metal {
-                            albedo,
-                            fuzz,
-                        });
+                        sphere_material = Arc::new(Metal { albedo, fuzz });
                         world
                             .objects
                             .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
@@ -258,17 +252,17 @@ pub fn rectangle_light() -> HittableList {
     let mut objects = HittableList::new();
     let pertext = Arc::new(SolidColor::new(Vec3::new(0.0, 0.8, 0.0)));
     let lamb = Arc::new(Lambertian::new(pertext));
-    let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
-    let earth_surface = Arc::new(Lambertian::new(earth_texture));
+    // let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
+    // let earth_surface = Arc::new(Lambertian::new(earth_texture));
     objects.objects.push(Box::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        lamb,
+        lamb.clone(),
     )));
     objects.objects.push(Box::new(Sphere::new(
         Vec3::new(0.0, 2.0, 0.0),
         2.0,
-        earth_surface,
+        lamb,
     )));
 
     let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0, 4.0, 4.0)));
