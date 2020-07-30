@@ -1,4 +1,5 @@
 extern crate image;
+#[allow(clippy::needless_return)]
 #[allow(clippy::float_cmp)]
 extern crate rand;
 mod aabb;
@@ -19,7 +20,6 @@ pub use camera::Camera;
 pub use hit::*;
 pub use image::GenericImage;
 use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
 use material::*;
 pub use perlin::*;
 pub use ray::Ray;
@@ -38,14 +38,28 @@ static mut static_world: HittableList = HittableList {
     objects: Vec::new(),
 };
 static mut cam: Camera = Camera::zero();
+pub struct ThreadMessage {
+    pub x: u32,
+    pub y: u32,
+    pub color: Vec3,
+}
+impl ThreadMessage {
+    pub fn new(x: u32, y: u32, color: Vec3) -> Self {
+        return Self {
+            x: x,
+            y: y,
+            color: color,
+        };
+    }
+}
 fn main() {
     return;
     // Image
-    const ASPECT_RATIO: f64 = 1.0 / 1.0;
-    const IMAGE_WIDTH: u32 = 400;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const IMAGE_WIDTH: u32 = 1000;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
-    const SAMPLES_PER_PIXEL: u32 = 200;
-    const MAX_DEPTH: i32 = 20;
+    const SAMPLES_PER_PIXEL: u32 = 300;
+    const MAX_DEPTH: i32 = 50;
     // World
     // static  world:HittableList = random_scene();
 
@@ -58,7 +72,7 @@ fn main() {
     let mut vfov: f64 = 40.0;
     let mut background: Vec3 = Vec3::zero();
     unsafe {
-        match 6 {
+        match 0 {
             1 => {
                 println!("==========RANDOM SCENE==========");
                 static_world = random_scene();
@@ -91,7 +105,7 @@ fn main() {
                 vfov = 20.0;
             }
             5 => {
-                println!("==========Noise Texture===========");
+                println!("==========NOISE TEXTURE===========");
                 static_world = two_perlin_spheres();
                 background = Vec3::new(0.7, 0.8, 1.0);
                 lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -99,7 +113,7 @@ fn main() {
                 vfov = 20.0;
             }
             6 => {
-                println!("==========Earth===========");
+                println!("==========EARTH===========");
                 static_world = earth();
                 background = Vec3::new(0.7, 0.8, 1.0);
                 lookfrom = Vec3::new(26.0, 3.0, 6.0);
@@ -139,6 +153,7 @@ fn main() {
         let mut mutex_img = Arc::clone(&mutex_img);
         let thr = thread::spawn(move || {
             for j in from..to {
+                let mut msg = Vec::new();
                 for i in 0..IMAGE_WIDTH {
                     let mut pixel_color = Vec3::zero();
                     for s in 0..SAMPLES_PER_PIXEL {
@@ -150,10 +165,14 @@ fn main() {
                             pixel_color += ray_color_static(&ray, &background, MAX_DEPTH);
                         } // unsafe
                     }
-                    // Write Back
-                    let mut img = mutex_img.lock().unwrap();
-                    let pixel = img.get_pixel_mut(i, j);
-                    write_color(pixel, &pixel_color, SAMPLES_PER_PIXEL);
+                    // Remember
+                    msg.push(ThreadMessage::new(i, j, pixel_color));
+                }
+                // Write Back
+                let mut img = mutex_img.lock().unwrap();
+                for message in msg.iter() {
+                    let pixel = img.get_pixel_mut(message.x, message.y);
+                    write_color(pixel, &message.color, SAMPLES_PER_PIXEL);
                 }
                 println!("j = {} in {} to {}", j, from, to);
             }
@@ -164,11 +183,7 @@ fn main() {
     for thr in thrpool {
         thr.join().unwrap();
     }
-    mutex_img
-        .lock()
-        .unwrap()
-        .save("output/cky.png")
-        .unwrap();
+    mutex_img.lock().unwrap().save("output/jzm.png").unwrap();
 }
 
 fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {

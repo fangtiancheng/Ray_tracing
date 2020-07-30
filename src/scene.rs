@@ -1,5 +1,6 @@
 use crate::{
-    aabb::*, camera::*, hit::*, material::*, ray::*, sphere::*, texture::*, utility::*, vec3::*,rectangle::*,
+    aabb::*, camera::*, hit::*, material::*, ray::*, rectangle::*, sphere::*, texture::*,
+    utility::*, vec3::*,
 };
 pub fn random_scene() -> HittableList {
     let mut world = HittableList::new();
@@ -245,9 +246,7 @@ pub fn two_perlin_spheres() -> HittableList {
 }
 pub fn earth() -> HittableList {
     let mut objects = HittableList::new();
-    let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from(
-        "src/cky.jpg",
-    )));
+    let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
     let earth_surface = Arc::new(Lambertian::new(earth_texture));
     objects
         .objects
@@ -255,14 +254,26 @@ pub fn earth() -> HittableList {
     return objects;
 }
 
-pub fn rectangle_light() -> HittableList{
+pub fn rectangle_light() -> HittableList {
     let mut objects = HittableList::new();
-    let pertext = Arc::new(SolidColor::new(Vec3::new(0.0,0.8,0.0)));
+    let pertext = Arc::new(SolidColor::new(Vec3::new(0.0, 0.8, 0.0)));
     let lamb = Arc::new(Lambertian::new(pertext));
-    objects.objects.push(Box::new(Sphere::new(Vec3::new(0.0,-1000.0,0.0),1000.0,lamb.clone())));
-    objects.objects.push(Box::new(Sphere::new(Vec3::new(0.0,2.0,0.0),2.0,lamb.clone())));
+    let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
+    let earth_surface = Arc::new(Lambertian::new(earth_texture));
+    objects.objects.push(Box::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        lamb,
+    )));
+    objects.objects.push(Box::new(Sphere::new(
+        Vec3::new(0.0, 2.0, 0.0),
+        2.0,
+        earth_surface,
+    )));
 
-    let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0,4.0,4.0)));
-    objects.objects.push(Box::new(XY_Rect::new(3.0,5.0,1.0,3.0,-2.0,diff_light)));
+    let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0, 4.0, 4.0)));
+    objects
+        .objects
+        .push(Box::new(XY_Rect::new(3.0, 5.0, 1.0, 3.0, -2.0, diff_light)));
     return objects;
 }
