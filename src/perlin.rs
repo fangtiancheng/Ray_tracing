@@ -52,3 +52,8 @@ impl Perlin {
         return self.ranfloat[self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k]];
     }
 }
+impl Default for Perlin {
+    fn default() -> Self {
+        Self::new()
+    }
+}

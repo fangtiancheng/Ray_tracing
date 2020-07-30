@@ -1,4 +1,4 @@
-#![allow(clippy::float_cmp,clippy::needless_return)]
+#![allow(clippy::float_cmp,clippy::needless_return,clippy::collapsible_if,clippy::too_many_arguments)]
 extern crate image;
 extern crate rand;
 mod aabb;
@@ -68,7 +68,7 @@ fn main() {
     let vfov: f64 ;
     let background: Vec3 ;
     unsafe {
-        match 0 {
+        match 6 {
             1 => {
                 println!("==========RANDOM SCENE==========");
                 lookfrom = Vec3::new(13.0, 2.0, 3.0);

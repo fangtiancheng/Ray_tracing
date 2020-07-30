@@ -57,7 +57,7 @@ impl Vec3 {
         return Self {
             x: r * a.cos(),
             y: r * a.sin(),
-            z: z,
+            z,
         };
     }
     pub fn squared_length(&self) -> f64 {

@@ -50,7 +50,11 @@ impl HittableList {
         };
     }
 }
-
+impl Default for HittableList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let mut temp_rec: HitRecord = HitRecord::clone(&rec);

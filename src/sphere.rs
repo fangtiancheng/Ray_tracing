@@ -26,11 +26,7 @@ impl Sphere {
         let b: f64 = 2.0 * (oc * ray.dir);
         let c: f64 = oc * oc - self.radius * self.radius;
         let delta: f64 = b * b - 4.0 * a * c;
-        if delta < 0.0 {
-            return false;
-        } else {
-            return true;
-        }
+        return delta >= 0.0;
     }
 }
 impl Hittable for Sphere {

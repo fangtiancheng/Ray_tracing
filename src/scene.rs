@@ -107,7 +107,7 @@ pub fn two_spheres() -> HittableList {
     objects.objects.push(Box::new(Sphere::new(
         Vec3::new(0.0, 10.0, 0.0),
         10.0,
-        Arc::new(Lambertian::new(checker.clone())),
+        Arc::new(Lambertian::new(checker)),
     )));
     return objects;
 }

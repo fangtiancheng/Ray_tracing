@@ -68,6 +68,11 @@ impl Texture for NoiseTexture {
         return Vec3::ones() * self.noise.noise(p);
     }
 }
+impl Default for NoiseTexture {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 pub struct ImageTexture {
     pub data: ImageBuffer<image::Rgb<u8>, std::vec::Vec<u8>>,
 }
@@ -101,11 +106,11 @@ impl Texture for ImageTexture {
 
         const COLOR_SCALE: f64 = 1.0 / 255.0;
         let pixel = self.data.get_pixel(i, j);
-        let [r, g, b] = pixel.0;
+        let [red, green, blue] = pixel.0;
         return Vec3::new(
-            r as f64 * COLOR_SCALE,
-            g as f64 * COLOR_SCALE,
-            b as f64 * COLOR_SCALE,
+            red as f64 * COLOR_SCALE,
+            green as f64 * COLOR_SCALE,
+            blue as f64 * COLOR_SCALE,
         );
     }
 }

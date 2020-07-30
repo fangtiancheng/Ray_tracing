@@ -39,7 +39,7 @@ impl Camera {
         let vertical: Vec3 = v * viewport_height * focus_dist;
         let origin: Vec3 = lookfrom;
         return Self {
-            origin: origin,
+            origin,
             lower_left_corner: origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist,
             horizontal,
             vertical,
