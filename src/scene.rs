@@ -129,6 +129,15 @@ pub fn simple_light() -> HittableList {
 
     return objects;
 }
+pub fn a_big_molecule() -> HittableList {
+    let mut world = HittableList::new();
+    let center = Vec3::new(0.5,0.2,0.5);
+    let albedo = Vec3::elemul(Vec3::new(0.2, 0.6, 0.3), Vec3::new(0.7, 0.1, 0.7));
+    let sphere_material = Arc::new(DiffuseLight::new(Arc::new(SolidColor::new(albedo))));
+    let molecule = Sphere::new(center, 0.2, sphere_material);
+    world.objects.push(Box::new(molecule));
+    return world;
+}
 pub fn random_scene_with_light() -> HittableList {
     let mut world = HittableList::new();
     let checker = Arc::new(CheckerTexture::new_by_color(
@@ -248,26 +257,26 @@ pub fn earth() -> HittableList {
     return objects;
 }
 
-// pub fn rectangle_light() -> HittableList {
-//     let mut objects = HittableList::new();
-//     let pertext = Arc::new(SolidColor::new(Vec3::new(0.0, 0.8, 0.0)));
-//     let lamb = Arc::new(Lambertian::new(pertext));
-//     // let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
-//     // let earth_surface = Arc::new(Lambertian::new(earth_texture));
-//     objects.objects.push(Box::new(Sphere::new(
-//         Vec3::new(0.0, -1000.0, 0.0),
-//         1000.0,
-//         lamb.clone(),
-//     )));
-//     objects.objects.push(Box::new(Sphere::new(
-//         Vec3::new(0.0, 2.0, 0.0),
-//         2.0,
-//         lamb,
-//     )));
+pub fn rectangle_light() -> HittableList {
+    let mut objects = HittableList::new();
+    let pertext = Arc::new(SolidColor::new(Vec3::new(0.0, 0.8, 0.0)));
+    let lamb = Arc::new(Lambertian::new(pertext));
+    let earth_texture = Arc::new(ImageTexture::new_by_pathstr(&String::from("src/jzm.jpg")));
+    let earth_surface = Arc::new(Lambertian::new(earth_texture));
+    objects.objects.push(Box::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        lamb,
+    )));
+    objects.objects.push(Box::new(Sphere::new(
+        Vec3::new(-2.0, 2.0, 0.0),
+        2.0,
+        earth_surface,
+    )));
 
-//     let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0, 4.0, 4.0)));
-//     objects
-//         .objects
-//         .push(Box::new(XyRect::new(3.0, 5.0, 1.0, 3.0, -2.0, diff_light)));
-//     return objects;
-// }
+    let diff_light = Arc::new(DiffuseLight::new_by_color(Vec3::new(4.0, 4.0, 4.0)));
+    objects
+        .objects
+        .push(Box::new(XyRect::new(3.0, 5.0, 1.0, 3.0, -2.0, diff_light)));
+    return objects;
+}

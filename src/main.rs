@@ -52,11 +52,11 @@ impl ThreadMessage {
 fn main() {
     // return;
     // Image
-    const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: u32 = 10;
+    const ASPECT_RATIO: f64 = 1920.0 / 1080.0;
+    const IMAGE_WIDTH: u32 = 192;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
-    const SAMPLES_PER_PIXEL: u32 = 300;
-    const MAX_DEPTH: i32 = 50;
+    const SAMPLES_PER_PIXEL: u32 = 500;
+    const MAX_DEPTH: i32 = 100;
     // World
     // static  world:HittableList = random_scene();
 
@@ -69,7 +69,7 @@ fn main() {
     let vfov: f64;
     let background: Vec3;
     unsafe {
-        match 2 {
+        match 3 {
             1 => {
                 println!("==========RANDOM SCENE==========");
                 lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -105,7 +105,7 @@ fn main() {
                 background = Vec3::new(0.7, 0.8, 1.0);
                 vfov = 20.0;
             }
-            _ => {
+            5 => {
                 println!("==========NOISE TEXTURE===========");
                 STATIC_WORLD = two_perlin_spheres();
                 background = Vec3::new(0.7, 0.8, 1.0);
@@ -113,22 +113,30 @@ fn main() {
                 lookat = Vec3::zero();
                 vfov = 20.0;
             }
-            // 6 => {
-            //     println!("==========EARTH===========");
-            //     STATIC_WORLD = earth();
-            //     background = Vec3::new(0.7, 0.8, 1.0);
-            //     lookfrom = Vec3::new(26.0, 3.0, 6.0);
-            //     lookat = Vec3::zero();
-            //     vfov = 20.0;
-            // }
-            // _ => {
-            //     println!("==========RECTANGEL LIGHT===========");
-            //     STATIC_WORLD = rectangle_light();
-            //     background = Vec3::zero();
-            //     lookfrom = Vec3::new(26.0, 3.0, 6.0);
-            //     lookat = Vec3::zero();
-            //     vfov = 20.0;
-            // }
+            6 => {
+                println!("==========EARTH===========");
+                STATIC_WORLD = earth();
+                background = Vec3::new(0.7, 0.8, 1.0);
+                lookfrom = Vec3::new(26.0, 3.0, 6.0);
+                lookat = Vec3::zero();
+                vfov = 20.0;
+            }
+            7 => {
+                STATIC_WORLD = a_big_molecule();
+                aperture = 0.0;
+                background = Vec3::zero();
+                lookfrom = Vec3::new(26.0, 15.0, -16.0);
+                lookat = Vec3::new(0.0, -2.0, 0.0);
+                vfov = 20.0;
+            }
+            _ => {
+                println!("==========RECTANGEL LIGHT===========");
+                STATIC_WORLD = rectangle_light();
+                background = Vec3::zero();
+                lookfrom = Vec3::new(26.0, 3.0, 6.0);
+                lookat = Vec3::new(0.0,2.0,0.0);
+                vfov = 20.0;
+            }
         }
         CAM = Camera::new(
             lookfrom,
@@ -146,7 +154,7 @@ fn main() {
     // Render
     let mutex_img = Arc::new(Mutex::new(ImageBuffer::new(IMAGE_WIDTH, IMAGE_HEIGHT)));
     // 多线程
-    const THRNUM: i32 = 16; //线程数量
+    const THRNUM: i32 = 12; //线程数量
     let mut thrpool = Vec::new();
     for thi in 0..THRNUM {
         let from = (thi as f64 / THRNUM as f64 * IMAGE_HEIGHT as f64) as u32;
@@ -184,7 +192,7 @@ fn main() {
     for thr in thrpool {
         thr.join().unwrap();
     }
-    mutex_img.lock().unwrap().save("output/jzm.png").unwrap();
+    mutex_img.lock().unwrap().save("output/demo.png").unwrap();
 }
 
 // fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
